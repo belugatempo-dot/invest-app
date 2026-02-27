@@ -1,14 +1,20 @@
 import { generateText } from "ai";
+import { execFile } from "child_process";
 
 export type LLMProvider = "anthropic" | "openai" | "deepseek";
 
 export class LLMNotConfiguredError extends Error {
-  constructor() {
+  constructor(message?: string) {
     super(
-      "LLM provider not configured. Set LLM_PROVIDER and LLM_API_KEY environment variables.",
+      message ??
+        "LLM provider not configured. Set LLM_PROVIDER and LLM_API_KEY environment variables, or install the Claude CLI.",
     );
     this.name = "LLMNotConfiguredError";
   }
+}
+
+function hasApiConfig(): boolean {
+  return !!(process.env.LLM_PROVIDER && process.env.LLM_API_KEY);
 }
 
 function getModel() {
@@ -45,12 +51,39 @@ function getModel() {
   }
 }
 
-export async function llmPrompt(prompt: string): Promise<string> {
-  const model = getModel();
-  const { text } = await generateText({
-    model,
-    prompt,
-    maxOutputTokens: 1024,
+function claudeCli(prompt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = execFile(
+      "claude",
+      ["-p", "--output-format", "text"],
+      { timeout: 60_000 },
+      (error, stdout) => {
+        if (error) {
+          reject(
+            new LLMNotConfiguredError(
+              `Claude CLI failed: ${error.message}`,
+            ),
+          );
+          return;
+        }
+        resolve(stdout.trim());
+      },
+    );
+    child.stdin?.write(prompt);
+    child.stdin?.end();
   });
-  return text.trim();
+}
+
+export async function llmPrompt(prompt: string): Promise<string> {
+  if (hasApiConfig()) {
+    const model = getModel();
+    const { text } = await generateText({
+      model,
+      prompt,
+      maxOutputTokens: 1024,
+    });
+    return text.trim();
+  }
+
+  return claudeCli(prompt);
 }

@@ -18,7 +18,7 @@
 | 图表 | Recharts, lightweight-charts v5 |
 | 定时任务 | Vercel Cron（生产）/ 本地脚本（开发）|
 | 数据源 | TradingView scan API（直接 HTTP，无需认证）|
-| AI 研报 | Vercel AI SDK（Anthropic、OpenAI、DeepSeek）|
+| AI 研报 | Vercel AI SDK（Anthropic、OpenAI、DeepSeek），本地开发自动 fallback 到 `claude -p` CLI |
 | 测试 | Vitest v4, v8 coverage（92 个测试）|
 
 ### 页面
@@ -112,7 +112,7 @@ npm run test -- --coverage  # 带覆盖率报告
 
 未设置 `DATABASE_URL` 时使用本地 SQLite 文件（`./data/invest.db`）。
 
-未设置 `LLM_PROVIDER`/`LLM_API_KEY` 时，研报接口返回 503。
+未设置 `LLM_PROVIDER`/`LLM_API_KEY` 时，自动 fallback 到 `claude -p` CLI（需安装 Claude Code CLI）。CLI 也不可用时返回 503。
 
 ### 认证
 
@@ -241,7 +241,7 @@ A bilingual (Chinese/English) investment analysis platform that screens US stock
 | Charts | Recharts, lightweight-charts v5 |
 | Scheduling | Vercel Cron (production), local script (dev) |
 | Data Source | TradingView scan API (direct HTTP, no auth) |
-| AI Thesis | Vercel AI SDK (Anthropic, OpenAI, DeepSeek) |
+| AI Thesis | Vercel AI SDK (Anthropic, OpenAI, DeepSeek); falls back to `claude -p` CLI for local dev |
 | Testing | Vitest v4, v8 coverage (92 tests) |
 
 ### Views
@@ -335,7 +335,7 @@ See `.env.example` for the full template. Copy to `.env.local` and fill in value
 
 When `DATABASE_URL` is not set, the app uses a local SQLite file at `./data/invest.db`.
 
-When `LLM_PROVIDER`/`LLM_API_KEY` are not set, the thesis endpoint returns 503.
+When `LLM_PROVIDER`/`LLM_API_KEY` are not set, the app falls back to `claude -p` CLI (requires Claude Code CLI installed). Returns 503 only when both API and CLI are unavailable.
 
 ### Authentication
 
