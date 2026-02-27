@@ -6,7 +6,12 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: "v8",
-      include: ["lib/signal-scorer.ts", "lib/reddit-sentiment.ts"],
+      include: [
+        "lib/signal-scorer.ts",
+        "lib/reddit-sentiment.ts",
+        "lib/xueqiu-sentiment.ts",
+        "lib/sentiment.ts",
+      ],
     },
   },
   resolve: {

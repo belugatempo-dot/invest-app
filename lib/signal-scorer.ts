@@ -229,7 +229,7 @@ export function scoreStock(
     sigMomentum: scoreMomentum(stock.rsi, stock.close, stock.high52w),
     sigPattern: scorePattern(stock.adx, stock.close, stock.high52w),
     sigCatalyst: scoreCatalyst(stock.earningsDays),
-    sigSentiment: scoreSentiment(stock.redditRank, stock.redditMentions, stock.redditMentions24hAgo),
+    sigSentiment: scoreSentiment(stock.sentimentRank, stock.sentimentMentions, stock.sentimentMentionsPrev),
   };
 
   const signalTotal = Object.values(signals).reduce(

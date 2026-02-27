@@ -4,7 +4,7 @@ import { themes } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { runScreen } from "@/lib/screener";
 import { scoreScreen } from "@/lib/signal-scorer";
-import { fetchRedditSentiment, mergeRedditData } from "@/lib/reddit-sentiment";
+import { enrichWithSentiment } from "@/lib/sentiment";
 import { persistScreenResults } from "@/lib/db-operations";
 
 export async function GET(request: NextRequest) {
@@ -55,8 +55,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const sentimentMap = await fetchRedditSentiment();
-    const enrichedStocks = mergeRedditData(rawStocks, sentimentMap);
+    const enrichedStocks = await enrichWithSentiment(rawStocks, market);
     const scoredStocks = scoreScreen(enrichedStocks);
 
     const { runId, count } = await persistScreenResults(

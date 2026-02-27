@@ -61,10 +61,11 @@ export const stockSnapshots = sqliteTable(
     // Catalyst
     earningsDate: text("earnings_date"),
     earningsDays: integer("earnings_days"),
-    // Reddit sentiment
-    redditMentions: integer("reddit_mentions"),
-    redditMentions24hAgo: integer("reddit_mentions_24h_ago"),
-    redditRank: integer("reddit_rank"),
+    // Sentiment (Reddit for US, Xueqiu for A-shares)
+    sentimentMentions: integer("sentiment_mentions"),
+    sentimentMentionsPrev: integer("sentiment_mentions_prev"),
+    sentimentRank: integer("sentiment_rank"),
+    sentimentSource: text("sentiment_source"),
     // Signal matrix (8 dimensions, each -1/0/+1)
     sigValuation: integer("sig_valuation"),
     sigGrowth: integer("sig_growth"),

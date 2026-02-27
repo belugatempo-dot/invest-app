@@ -66,9 +66,10 @@ export function mergeRedditData(
     if (!sentiment) return { ...stock };
     return {
       ...stock,
-      redditRank: sentiment.rank,
-      redditMentions: sentiment.mentions,
-      redditMentions24hAgo: sentiment.mentions24hAgo,
+      sentimentRank: sentiment.rank,
+      sentimentMentions: sentiment.mentions,
+      sentimentMentionsPrev: sentiment.mentions24hAgo,
+      sentimentSource: "reddit" as const,
     };
   });
 }

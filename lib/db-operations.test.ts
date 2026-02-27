@@ -84,7 +84,7 @@ async function createSchema() {
     rsi REAL, adx REAL, sma50 REAL, sma200 REAL,
     high_52w REAL, low_52w REAL, ath REAL,
     earnings_date TEXT, earnings_days INTEGER,
-    reddit_mentions INTEGER, reddit_mentions_24h_ago INTEGER, reddit_rank INTEGER,
+    sentiment_mentions INTEGER, sentiment_mentions_prev INTEGER, sentiment_rank INTEGER, sentiment_source TEXT,
     sig_valuation INTEGER, sig_growth INTEGER, sig_margins INTEGER,
     sig_trend INTEGER, sig_momentum INTEGER, sig_pattern INTEGER,
     sig_catalyst INTEGER, sig_sentiment INTEGER,

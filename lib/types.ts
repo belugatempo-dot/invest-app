@@ -26,10 +26,11 @@ export interface RawStockData {
   // Catalyst
   earningsDate?: string;
   earningsDays?: number;
-  // Reddit sentiment
-  redditRank?: number;
-  redditMentions?: number;
-  redditMentions24hAgo?: number;
+  // Sentiment (Reddit for US, Xueqiu for A-shares)
+  sentimentRank?: number;
+  sentimentMentions?: number;
+  sentimentMentionsPrev?: number;
+  sentimentSource?: "reddit" | "xueqiu";
 }
 
 /** Signal scores for 8 dimensions (-1, 0, or +1) */

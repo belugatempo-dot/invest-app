@@ -117,7 +117,7 @@ export default async function StockDeepDivePage({ params }: StockPageProps) {
       logic: "<30天催化剂; >60天无催化",
     },
     sigSentiment: {
-      metric: `Reddit排名: ${snapshot.redditRank ?? "N/A"} | 提及: ${snapshot.redditMentions ?? "N/A"}`,
+      metric: `${snapshot.sentimentSource === "xueqiu" ? "雪球排名" : "Reddit排名"}: ${snapshot.sentimentRank ?? "N/A"} | 提及: ${snapshot.sentimentMentions ?? "N/A"}`,
       logic: "Top100热度↑>20% → +1; Top20热度↓>30% → -1",
     },
   };

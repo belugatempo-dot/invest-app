@@ -111,13 +111,16 @@ describe("mergeRedditData", () => {
 
     const merged = mergeRedditData(baseStocks, sentimentMap);
 
-    expect(merged[0].redditRank).toBe(1);
-    expect(merged[0].redditMentions).toBe(1038);
-    expect(merged[0].redditMentions24hAgo).toBe(800);
-    expect(merged[1].redditRank).toBe(5);
+    expect(merged[0].sentimentRank).toBe(1);
+    expect(merged[0].sentimentMentions).toBe(1038);
+    expect(merged[0].sentimentMentionsPrev).toBe(800);
+    expect(merged[0].sentimentSource).toBe("reddit");
+    expect(merged[1].sentimentRank).toBe(5);
+    expect(merged[1].sentimentSource).toBe("reddit");
     // Stock not in reddit data should have undefined fields
-    expect(merged[2].redditRank).toBeUndefined();
-    expect(merged[2].redditMentions).toBeUndefined();
+    expect(merged[2].sentimentRank).toBeUndefined();
+    expect(merged[2].sentimentMentions).toBeUndefined();
+    expect(merged[2].sentimentSource).toBeUndefined();
   });
 
   it("should not mutate the original stocks array", () => {
@@ -127,15 +130,15 @@ describe("mergeRedditData", () => {
 
     const merged = mergeRedditData(baseStocks, sentimentMap);
 
-    expect(baseStocks[0].redditRank).toBeUndefined();
-    expect(merged[0].redditRank).toBe(1);
+    expect(baseStocks[0].sentimentRank).toBeUndefined();
+    expect(merged[0].sentimentRank).toBe(1);
   });
 
   it("should handle empty sentiment map", () => {
     const merged = mergeRedditData(baseStocks, new Map());
 
     expect(merged.length).toBe(3);
-    expect(merged[0].redditRank).toBeUndefined();
+    expect(merged[0].sentimentRank).toBeUndefined();
   });
 
   it("should handle empty stocks array", () => {
