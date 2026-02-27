@@ -1,65 +1,122 @@
-import Image from "next/image";
+import { db } from "@/lib/db";
+import { screenRuns, stockSnapshots, themes, watchlist } from "@/lib/schema";
+import { eq, desc } from "drizzle-orm";
+import type { StockRow } from "@/components/signal-matrix";
+import { DashboardClient } from "@/app/dashboard-client";
+import Link from "next/link";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  // Get latest screen run
+  const latestRun = await db
+    .select()
+    .from(screenRuns)
+    .orderBy(desc(screenRuns.runAt))
+    .limit(1)
+    .get();
+
+  const watchlistRows = await db.select().from(watchlist).all();
+  const watchlistTickers = watchlistRows.map((r) => r.ticker);
+
+  let stocks: StockRow[] = [];
+  let themeName: string | null = null;
+  let runDate: string | null = null;
+
+  if (latestRun) {
+    const theme = await db
+      .select()
+      .from(themes)
+      .where(eq(themes.id, latestRun.themeId))
+      .get();
+    themeName = theme?.nameZh ?? latestRun.themeId;
+    runDate = latestRun.runAt;
+
+    const rows = await db
+      .select()
+      .from(stockSnapshots)
+      .where(eq(stockSnapshots.runId, latestRun.id))
+      .all();
+
+    stocks = rows.map((r) => ({
+      id: r.id,
+      ticker: r.ticker,
+      company: r.company,
+      close: r.close,
+      changePct: r.changePct,
+      marketCap: r.marketCap,
+      sigValuation: r.sigValuation,
+      sigGrowth: r.sigGrowth,
+      sigMargins: r.sigMargins,
+      sigTrend: r.sigTrend,
+      sigMomentum: r.sigMomentum,
+      sigPattern: r.sigPattern,
+      sigCatalyst: r.sigCatalyst,
+      sigSentiment: r.sigSentiment,
+      signalTotal: r.signalTotal,
+      rating: r.rating,
+      entryRange: r.entryRange,
+      target: r.target,
+      stop: r.stop,
+      pe: r.pe,
+      revGrowth: r.revGrowth,
+      grossMargin: r.grossMargin,
+      rsi: r.rsi,
+      adx: r.adx,
+      sma50: r.sma50,
+      sma200: r.sma200,
+      high52w: r.high52w,
+      earningsDays: r.earningsDays,
+      sector: r.sector,
+      thesisZh: r.thesisZh,
+    }));
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="p-6">
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="font-[family-name:var(--font-serif)] text-3xl text-foreground tracking-tight">
+          决策<span className="text-primary">面板</span>
+        </h1>
+        <p className="text-text-secondary text-sm mt-2">
+          Signal Matrix — 信号矩阵决策引擎
+        </p>
+        <div className="gold-divider mt-4" />
+      </div>
+
+      {stocks.length > 0 ? (
+        <>
+          {/* Meta info */}
+          <div className="flex items-center gap-4 mb-4 text-sm text-text-muted">
+            <span>
+              主题:{" "}
+              <span className="text-text-secondary">{themeName}</span>
+            </span>
+            <span>·</span>
+            <span>
+              {stocks.length} 只标的
+            </span>
+            <span>·</span>
+            <span className="font-[family-name:var(--font-mono)]">
+              {runDate}
+            </span>
+          </div>
+
+          {/* Watchlist + Signal matrix */}
+          <DashboardClient stocks={stocks} watchlistTickers={watchlistTickers} latestRunId={latestRun?.id} />
+        </>
+      ) : (
+        <div className="rounded-lg border border-border-subtle bg-surface p-12 text-center">
+          <p className="text-text-muted text-lg mb-4">尚无筛选数据</p>
+          <Link
+            href="/screens"
+            className="inline-block rounded-md bg-primary/10 border border-primary/30 text-primary px-6 py-2 text-sm hover:bg-primary/20 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            前往主题筛选 →
+          </Link>
         </div>
-      </main>
+      )}
     </div>
   );
 }

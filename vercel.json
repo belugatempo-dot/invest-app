@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron?theme=ai-infrastructure",
+      "schedule": "30 13 * * 1-5"
+    },
+    {
+      "path": "/api/cron?theme=robotics",
+      "schedule": "0 1 * * 1"
+    },
+    {
+      "path": "/api/cron?theme=energy-transition",
+      "schedule": "0 1 * * 1"
+    },
+    {
+      "path": "/api/cron?theme=healthcare-ai",
+      "schedule": "0 1 * * 1"
+    },
+    {
+      "path": "/api/cron?theme=defense-reshoring",
+      "schedule": "0 1 * * 1"
+    }
+  ]
+}
