@@ -32,12 +32,12 @@ interface Props {
 }
 
 export function StockDetailPanel({ stock, onClose }: Props) {
-  const [thesis, setThesis] = useState<string | null>(null);
+  const [thesis, setThesis] = useState<string | null>(stock.thesisZh ?? null);
   const [loading, setLoading] = useState(false);
-  // Reset thesis state when stock changes
+  // Sync thesis state when stock changes
   useEffect(() => {
-    setThesis(null);
-  }, [stock.ticker]);
+    setThesis(stock.thesisZh ?? null);
+  }, [stock.ticker, stock.thesisZh]);
 
   const generateThesis = async () => {
     setLoading(true);

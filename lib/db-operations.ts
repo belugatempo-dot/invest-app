@@ -1,5 +1,6 @@
 import { db } from "./db";
 import { screenRuns, stockSnapshots } from "./schema";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 import type { ScoredStock } from "./types";
 
 /**
@@ -22,6 +23,20 @@ export async function persistScreenResults(
     .get();
 
   for (const stock of scoredStocks) {
+    // Inherit thesis from the most recent snapshot that has one
+    const prev = await db
+      .select({ thesisZh: stockSnapshots.thesisZh })
+      .from(stockSnapshots)
+      .where(
+        and(
+          eq(stockSnapshots.ticker, stock.ticker),
+          isNotNull(stockSnapshots.thesisZh),
+        ),
+      )
+      .orderBy(desc(stockSnapshots.id))
+      .limit(1)
+      .get();
+
     await db
       .insert(stockSnapshots)
       .values({
@@ -64,6 +79,7 @@ export async function persistScreenResults(
         target: stock.target ?? null,
         stop: stock.stop ?? null,
         sector: stock.sector ?? null,
+        thesisZh: prev?.thesisZh ?? null,
       })
       .run();
   }
