@@ -122,7 +122,7 @@ export async function runScreen(
   const body = {
     markets: [market],
     symbols: { query: { types: [] }, tickers: [] },
-    options: { lang: "en" },
+    options: { lang: market === "china" ? "zh" : "en" },
     columns: SCREEN_FIELDS,
     filter: buildFilters(filters),
     sort: { sortBy: "market_cap_basic", sortOrder: "desc" },

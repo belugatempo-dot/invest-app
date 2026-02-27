@@ -36,6 +36,7 @@ export default async function ScreenerPage() {
       id: t.id,
       nameZh: t.nameZh,
       nameEn: t.nameEn,
+      market: t.market as "america" | "china",
       sectors: t.sectors as string[],
       lastRun: latestRun?.runAt ?? undefined,
       candidateCount: latestRun?.candidateCount ?? undefined,

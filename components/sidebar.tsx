@@ -6,7 +6,7 @@ import { useState } from "react";
 
 const navItems = [
   { href: "/screens", label: "主题筛选", labelEn: "Screener", icon: "◉" },
-  { href: "/", label: "决策面板", labelEn: "Dashboard", icon: "◈" },
+  { href: "/dashboard", label: "决策面板", labelEn: "Dashboard", icon: "◈" },
   { href: "/history", label: "历史追踪", labelEn: "History", icon: "◷" },
 ];
 
@@ -51,10 +51,7 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-3">
         {navItems.map((item) => {
-          const isActive =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
+          const isActive = pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}

@@ -7,6 +7,7 @@ export interface ThemeData {
   id: string;
   nameZh: string;
   nameEn: string;
+  market: "america" | "china";
   sectors: string[];
   lastRun?: string;
   candidateCount?: number;
@@ -31,14 +32,26 @@ export function ThemeCard({ theme, isLoading, onScreen }: Props) {
             {theme.nameEn}
           </p>
         </div>
-        {theme.topPick && (
+        <div className="flex items-center gap-1.5">
           <Badge
             variant="outline"
-            className="text-xs rating-buy font-[family-name:var(--font-mono)]"
+            className={`text-[10px] ${
+              theme.market === "china"
+                ? "border-red-500/40 text-red-400 bg-red-500/10"
+                : "border-blue-500/40 text-blue-400 bg-blue-500/10"
+            }`}
           >
-            {theme.topPick}
+            {theme.market === "china" ? "A\u80a1" : "\u7f8e\u80a1"}
           </Badge>
-        )}
+          {theme.topPick && (
+            <Badge
+              variant="outline"
+              className="text-xs rating-buy font-[family-name:var(--font-mono)]"
+            >
+              {theme.topPick}
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Sector tags */}
