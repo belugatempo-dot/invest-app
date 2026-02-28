@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const authToken = process.env.AUTH_TOKEN;
 
   // If no AUTH_TOKEN configured, app is open

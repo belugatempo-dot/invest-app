@@ -172,7 +172,7 @@ invest-app/
 │   └── cron-local.ts           # 本地定时任务调度器
 ├── drizzle/                    # 数据库迁移元数据
 ├── data/                       # SQLite 数据库（已 gitignore）
-├── middleware.ts                # 可选 Bearer 令牌认证
+├── proxy.ts                    # 可选 Bearer 令牌认证
 ├── vercel.json                 # Vercel Cron 任务定义
 ├── .env.example                # 环境变量模板
 ├── vitest.config.ts            # 测试配置
@@ -395,7 +395,7 @@ invest-app/
 │   └── cron-local.ts           # Local cron scheduler
 ├── drizzle/                    # Migration metadata
 ├── data/                       # SQLite database (gitignored)
-├── middleware.ts                # Optional bearer token auth
+├── proxy.ts                    # Optional bearer token auth
 ├── vercel.json                 # Vercel Cron job definitions
 ├── .env.example                # Environment variable template
 ├── vitest.config.ts            # Test configuration

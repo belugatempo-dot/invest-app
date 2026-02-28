@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
-import { middleware } from "./middleware";
+import { proxy } from "./proxy";
 
 function makeRequest(
   url: string,
@@ -9,7 +9,7 @@ function makeRequest(
   return new NextRequest(new URL(url, "http://localhost:8888"), { headers });
 }
 
-describe("Auth middleware", () => {
+describe("Auth proxy", () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
@@ -22,13 +22,13 @@ describe("Auth middleware", () => {
 
   it("allows all requests when AUTH_TOKEN is not set", () => {
     delete process.env.AUTH_TOKEN;
-    const res = middleware(makeRequest("/"));
+    const res = proxy(makeRequest("/"));
     expect(res.status).toBe(200);
   });
 
   it("allows requests with valid Bearer header", () => {
     process.env.AUTH_TOKEN = "secret123";
-    const res = middleware(
+    const res = proxy(
       makeRequest("/", { authorization: "Bearer secret123" }),
     );
     expect(res.status).toBe(200);
@@ -36,13 +36,13 @@ describe("Auth middleware", () => {
 
   it("allows requests with valid query param", () => {
     process.env.AUTH_TOKEN = "secret123";
-    const res = middleware(makeRequest("/?token=secret123"));
+    const res = proxy(makeRequest("/?token=secret123"));
     expect(res.status).toBe(200);
   });
 
   it("rejects requests without token when AUTH_TOKEN is set", async () => {
     process.env.AUTH_TOKEN = "secret123";
-    const res = middleware(makeRequest("/"));
+    const res = proxy(makeRequest("/"));
     expect(res.status).toBe(401);
     const body = await res.json();
     expect(body.error).toBe("Unauthorized");
@@ -50,7 +50,7 @@ describe("Auth middleware", () => {
 
   it("rejects requests with wrong token", async () => {
     process.env.AUTH_TOKEN = "secret123";
-    const res = middleware(
+    const res = proxy(
       makeRequest("/", { authorization: "Bearer wrong" }),
     );
     expect(res.status).toBe(401);
@@ -58,7 +58,7 @@ describe("Auth middleware", () => {
 
   it("rejects requests with wrong query param", async () => {
     process.env.AUTH_TOKEN = "secret123";
-    const res = middleware(makeRequest("/?token=wrong"));
+    const res = proxy(makeRequest("/?token=wrong"));
     expect(res.status).toBe(401);
   });
 });

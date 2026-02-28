@@ -28,7 +28,7 @@ npm run db:studio        # Open Drizzle Studio GUI
 - **TradingView scan API** — Direct HTTP POST to `https://scanner.tradingview.com/america/scan`. No auth required.
 - **Signal scoring is pure functions** in `lib/signal-scorer.ts`. All business logic is here, fully tested. Do not add side effects to these functions.
 - **LLM abstraction** (`lib/llm.ts`) — Vercel AI SDK supporting Anthropic, OpenAI, DeepSeek. Provider-agnostic via `LLM_PROVIDER` + `LLM_API_KEY` env vars. Falls back to `claude -p` CLI when no API key configured (local dev with Claude Max). Returns 503 only when both API and CLI are unavailable.
-- **Auth middleware** (`middleware.ts`) — Optional bearer token via `AUTH_TOKEN` env var. Open access when not configured.
+- **Auth proxy** (`proxy.ts`) — Optional bearer token via `AUTH_TOKEN` env var. Open access when not configured.
 - **Cron** — Vercel Cron Jobs in production (`vercel.json`), `scripts/cron-local.ts` for local dev.
 - **Polling** for dashboard updates (30s interval). SSE kept for local dev compatibility.
 
@@ -104,7 +104,7 @@ See `.env.example`. All optional except `DATABASE_URL` + `DATABASE_AUTH_TOKEN` f
 | `lib/llm.ts` | LLM abstraction — Anthropic/OpenAI/DeepSeek via AI SDK |
 | `lib/db-operations.ts` | Shared persist logic for screen results |
 | `lib/sse.ts` | SSE event broadcaster (local dev) |
-| `middleware.ts` | Optional bearer token auth |
+| `proxy.ts` | Optional bearer token auth |
 | `vercel.json` | Vercel Cron job definitions |
 | `scripts/cron-local.ts` | Local cron scheduler |
 | `app/api/screen/` | Run themed screen → score → persist |
