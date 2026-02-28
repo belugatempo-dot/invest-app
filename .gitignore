@@ -54,3 +54,6 @@ next-env.d.ts
 # Plan files
 *_Plan.md
 *_plan.md
+
+# Local scripts
+start.sh
