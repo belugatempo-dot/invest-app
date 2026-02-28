@@ -13,7 +13,7 @@ npm run dev              # Next.js dev server on port 8888
 npm run build            # Production build
 npm run start            # Production server on port 8888
 npm run cron:local       # Local cron scheduler (run alongside dev server)
-npm run test             # Vitest unit tests (124 tests)
+npm run test             # Vitest unit tests (133 tests)
 npm run test -- --coverage  # With v8 coverage
 npm run test:e2e         # Playwright E2E tests (35 tests)
 npm run test:e2e:ui      # Playwright interactive UI mode
@@ -92,7 +92,7 @@ See `.env.example`. All optional except `DATABASE_URL` + `DATABASE_AUTH_TOKEN` f
 
 ### Unit Tests (Vitest)
 - **Framework:** Vitest v4 with globals enabled.
-- **124 tests** across 7 test files.
+- **133 tests** across 8 test files.
 - **Coverage target:** 100% on `lib/signal-scorer.ts` (business logic). Enforced in `vitest.config.ts`.
 - **Test file convention:** `*.test.ts` co-located with source.
 - Signal scorer tests cover all 8 scoring functions, rating derivation, level calculations, edge cases.
