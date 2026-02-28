@@ -9,7 +9,7 @@ function makeRequest(
   return new NextRequest(new URL(url, "http://localhost:8888"), { headers });
 }
 
-describe("Auth proxy", () => {
+describe("Auth proxy (applied only to /api/thesis)", () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
@@ -34,12 +34,6 @@ describe("Auth proxy", () => {
     expect(res.status).toBe(200);
   });
 
-  it("allows requests with valid query param", () => {
-    process.env.AUTH_TOKEN = "secret123";
-    const res = proxy(makeRequest("/?token=secret123"));
-    expect(res.status).toBe(200);
-  });
-
   it("rejects requests without token when AUTH_TOKEN is set", async () => {
     process.env.AUTH_TOKEN = "secret123";
     const res = proxy(makeRequest("/"));
@@ -56,9 +50,9 @@ describe("Auth proxy", () => {
     expect(res.status).toBe(401);
   });
 
-  it("rejects requests with wrong query param", async () => {
+  it("rejects requests with query param token (no longer supported)", async () => {
     process.env.AUTH_TOKEN = "secret123";
-    const res = proxy(makeRequest("/?token=wrong"));
+    const res = proxy(makeRequest("/?token=secret123"));
     expect(res.status).toBe(401);
   });
 });

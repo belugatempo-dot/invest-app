@@ -10,10 +10,6 @@ export function proxy(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader === `Bearer ${authToken}`) return NextResponse.next();
 
-  // Check query param (useful for sharing links)
-  const tokenParam = request.nextUrl.searchParams.get("token");
-  if (tokenParam === authToken) return NextResponse.next();
-
   // Unauthorized
   return NextResponse.json(
     { error: "Unauthorized" },
@@ -22,8 +18,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    // Match all routes except static assets and Next.js internals
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/api/thesis"],
 };
