@@ -49,3 +49,8 @@ next-env.d.ts
 
 # Chart images from CLI push
 /public/charts/*.png
+.env*.local
+
+# Plan files
+*_Plan.md
+*_plan.md
