@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invest App — Codebase Visualization</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== StarQuest Night Sky Theme ===== */
+:root {
+  --bg:          #0f172a;
+  --bg-surface:  rgba(255,255,255,0.05);
+  --bg-raised:   rgba(255,255,255,0.08);
+  --bg-hover:    rgba(255,255,255,0.10);
+  --fg:          #e8e4f0;
+  --fg-strong:   #f4f0ff;
+  --accent:      #e8b84b;
+  --accent-dim:  rgba(232,184,75,0.12);
+  --accent-mid:  rgba(232,184,75,0.22);
+  --teal:        #6bc4c4;
+  --teal-dim:    rgba(107,196,196,0.12);
+  --green:       #7ab87a;
+  --green-dim:   rgba(122,184,122,0.12);
+  --red:         #e07070;
+  --red-dim:     rgba(224,112,112,0.12);
+  --blue:        #7aa8d4;
+  --blue-dim:    rgba(122,168,212,0.12);
+  --orange:      #d4a04a;
+  --purple:      #b09adf;
+  --purple-dim:  rgba(176,154,223,0.12);
+  --china-red:   #e06b6b;
+  --china-dim:   rgba(224,107,107,0.10);
+  --border:      rgba(255,255,255,0.08);
+  --border-hover:rgba(255,255,255,0.15);
+  --text-2:      #9a96b0;
+  --text-3:      #6b6880;
+  --radius:      10px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: linear-gradient(170deg, #1e3a5f 0%, #0f172a 35%, #312e81 65%, #0f172a 100%);
+  background-attachment: fixed;
+  color: var(--fg);
+  font-family: Inter, 'Noto Sans SC', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  line-height: 1.7;
+  overflow-x: hidden;
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 512px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Starfield — individual DOM stars with independent twinkle */
+.starfield {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.starfield span {
+  position: absolute;
+  border-radius: 50%;
+  animation: twinkle ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  0%  { opacity: 0.2; transform: scale(0.8); }
+  to  { opacity: 1;   transform: scale(1.2); }
+}
+
+/* ===== Headings ===== */
+h1, h2, h3, .heading {
+  font-family: Inter, 'Noto Sans SC', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+/* ===== Header ===== */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15,23,42,0.88);
+  backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  gap: 16px;
+}
+.logo {
+  font-family: Inter, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: var(--fg-strong);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.logo-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), #a07a50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--bg);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Tab nav */
+.tab-nav {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  justify-content: center;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-family: Inter, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  margin: 10px 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  letter-spacing: 0.01em;
+}
+.tab-btn:hover { color: var(--fg); background: rgba(255,255,255,0.05); }
+.tab-btn.active {
+  color: #0f172a;
+  background: var(--accent);
+  font-weight: 600;
+}
+
+/* Lang toggle */
+.lang-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+.lang-toggle:hover {
+  border-color: var(--border-hover);
+  color: var(--fg);
+  background: var(--bg-surface);
+}
+
+/* ===== Main ===== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+.tab-content { display: none; }
+.tab-content.active {
+  display: block;
+  animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Cards ===== */
+.card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+.card:hover {
+  border-color: rgba(255,255,255,0.15);
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(232,184,75,0.08);
+}
+
+/* ===== Section titles ===== */
+.section-title {
+  font-family: Inter, sans-serif;
+  font-size: 1.85rem;
+  font-weight: 300;
+  color: var(--accent);
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: -0.02em;
+}
+.section-subtitle {
+  color: var(--text-2);
+  font-size: 1rem;
+  margin-top: -24px;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+/* ===== Tab 1: Overview ===== */
+.hero {
+  text-align: center;
+  padding: 64px 0 40px;
+  margin-bottom: 32px;
+  position: relative;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(232,184,75,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero h1 {
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  color: var(--fg-strong);
+  margin-bottom: 16px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.hero .subtitle {
+  font-size: 1.15rem;
+  color: var(--text-2);
+  max-width: 580px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Stats — compact inline pills */
+.stats-grid {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 18px;
+}
+.stat-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+
+/* Browser mockup frame */
+.browser-mockup {
+  background: #0a1628;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  overflow: hidden;
+  margin-bottom: 64px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.browser-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.browser-dot { width: 10px; height: 10px; border-radius: 50%; }
+.browser-dot.r { background: #ef4444; }
+.browser-dot.y { background: #eab308; }
+.browser-dot.g { background: #22c55e; }
+.browser-url {
+  flex: 1; margin-left: 8px; background: rgba(255,255,255,0.06);
+  border-radius: 6px; padding: 5px 12px; font-size: 0.75rem;
+  color: var(--text-3); font-family: 'JetBrains Mono', monospace;
+}
+.browser-content {
+  display: grid; grid-template-columns: 180px 1fr;
+  min-height: 320px;
+}
+
+/* Mockup sidebar */
+.mock-sidebar {
+  background: rgba(10,22,40,0.9);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 20px 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mock-sidebar-logo {
+  color: var(--accent); font-weight: 700; font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.mock-sidebar-sub {
+  font-size: 0.6rem; color: var(--text-3); margin-bottom: 12px;
+}
+.mock-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px;
+  font-size: 0.78rem; color: var(--text-2);
+}
+.mock-nav-item.active {
+  background: rgba(232,184,75,0.1);
+  color: var(--accent);
+}
+
+/* Mockup main area (signal table) */
+.mock-main { padding: 20px; overflow: hidden; }
+.mock-title {
+  font-size: 0.95rem; font-weight: 700; color: var(--fg-strong);
+  margin-bottom: 14px;
+}
+.mock-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+}
+.mock-table th {
+  text-align: left; padding: 6px 8px; color: var(--text-3);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-weight: 500; font-size: 0.62rem; text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mock-table td {
+  padding: 8px 8px; border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--text-2);
+}
+.mock-table tr:hover td { background: rgba(255,255,255,0.02); }
+.mock-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 0.6rem; font-weight: 600;
+}
+.mock-badge.buy { background: rgba(118,185,0,0.15); color: #76b900; }
+.mock-badge.lean { background: rgba(91,164,245,0.15); color: #5ba4f5; }
+.mock-badge.hold { background: rgba(90,127,160,0.15); color: #5a7fa0; }
+.mock-badge.sell { background: rgba(245,166,35,0.15); color: #f5a623; }
+.mock-signal { display: inline-block; width: 18px; text-align: center; }
+.mock-signal.pos { color: #76b900; }
+.mock-signal.neg { color: #ef4444; }
+.mock-signal.neu { color: #5a7fa0; }
+
+/* Feature cards */
+.feature-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 16px; margin-bottom: 64px;
+}
+.feature-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  transition: border-color 0.25s, transform 0.25s;
+}
+.feature-card:hover {
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+.feature-icon-lg {
+  font-size: 1.8rem; margin-bottom: 14px;
+}
+.feature-card h3 {
+  font-size: 1.05rem; color: var(--fg-strong);
+  margin-bottom: 8px;
+}
+.feature-card p {
+  font-size: 0.92rem; color: var(--text-2); line-height: 1.6;
+}
+
+/* Horizontal workflow steps */
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+  position: relative;
+}
+.workflow-step {
+  text-align: center;
+  padding: 24px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  position: relative;
+}
+.workflow-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.workflow-step h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg-strong);
+  margin-bottom: 6px;
+}
+.workflow-step p {
+  font-size: 0.82rem;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+/* Arrow connectors between steps */
+.workflow-step:not(:last-child)::after {
+  content: '\2192';
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  font-size: 1rem;
+  z-index: 1;
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 48px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 8px;
+  bottom: 24px;
+  width: 1px;
+  background: linear-gradient(180deg, #5878c8, #3a5a98 50%, rgba(30,58,95,0.3));
+}
+.timeline-step {
+  position: relative;
+  margin-bottom: 40px;
+}
+.timeline-dot {
+  position: absolute;
+  left: -38px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  background: #1e3a5f;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(232,184,75,0.3);
+}
+.timeline-step h3 {
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: var(--fg-strong);
+  margin-bottom: 6px;
+}
+.timeline-step p {
+  font-size: 1rem;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+
+/* ===== Tab 2: Signal Engine ===== */
+.signal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 56px;
+}
+.signal-card {
+  padding: 24px 20px;
+  text-align: left;
+}
+.signal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.signal-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  background: var(--accent-dim);
+  flex-shrink: 0;
+}
+.signal-name {
+  font-family: Inter, sans-serif;
+  font-size: 1.12rem;
+  font-weight: 400;
+  color: var(--accent);
+  line-height: 1.2;
+}
+.signal-name-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-3);
+  margin-top: 1px;
+}
+.signal-thresholds {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  line-height: 2;
+  margin-bottom: 14px;
+}
+.signal-indicators {
+  display: flex;
+  gap: 6px;
+}
+.sig-dot {
+  width: 28px;
+  height: 22px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+.sig-neg { background: var(--red-dim); color: var(--red); }
+.sig-neu { background: rgba(122,120,160,0.15); color: #7a78a0; }
+.sig-pos { background: var(--green-dim); color: var(--green); }
+
+/* Example table */
+.example-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 56px;
+}
+.example-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  padding: 12px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.example-table th:first-child { text-align: left; }
+.example-table td {
+  padding: 14px 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+}
+.example-table td:first-child {
+  text-align: left;
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--fg);
+}
+.example-table tr:hover td { background: rgba(232,184,75,0.04); }
+
+.cell-pos { color: var(--green); }
+.cell-neu { color: var(--text-3); }
+.cell-neg { color: var(--red); }
+
+/* Rating scale */
+.rating-scale {
+  display: flex;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  gap: 2px;
+}
+.rating-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+  font-weight: 500;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+.rating-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--text-3);
+  padding: 0 2px;
+}
+
+/* ===== Tab 3: Pipeline ===== */
+.pipeline-container {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+}
+.pipeline-svg { width: 100%; min-width: 860px; }
+.pipeline-node { cursor: pointer; }
+.pipeline-node:hover rect { stroke-opacity: 0.8 !important; }
+.pipeline-label {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  fill: var(--fg);
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.pipeline-sublabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  fill: #9a96b0;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.flow-line {
+  stroke: rgba(255,255,255,0.12);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  fill: none;
+}
+.flow-particle {
+  fill: var(--accent);
+  opacity: 0.7;
+}
+
+.detail-panel {
+  display: none;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-top: 24px;
+  animation: fadeUp 0.25s ease;
+}
+.detail-panel.visible { display: block; }
+.detail-panel h3 {
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  color: var(--accent);
+  margin-bottom: 10px;
+  font-size: 1.25rem;
+}
+.detail-panel p {
+  font-size: 0.95rem;
+  color: var(--text-2);
+  margin-bottom: 4px;
+  line-height: 1.6;
+}
+.detail-tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin: 3px 4px 3px 0;
+}
+
+/* ===== Tab 4: Architecture ===== */
+.arch-svg { width: 100%; min-width: 780px; }
+.arch-label {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  fill: var(--fg);
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.arch-sublabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  fill: #9a96b0;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-top: 40px;
+}
+.tech-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.tech-item:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-raised);
+}
+.tech-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  width: 28px;
+  text-align: center;
+}
+.tech-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--fg);
+  line-height: 1.3;
+}
+.tech-ver {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+
+/* ===== Tab 5: Theme Presets ===== */
+.themes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.theme-card {
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.theme-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.theme-card.us::after { background: linear-gradient(90deg, var(--accent), transparent 80%); }
+.theme-card.cn::after { background: linear-gradient(90deg, var(--china-red), transparent 80%); }
+.theme-card:hover::after { opacity: 1; }
+
+.theme-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.theme-flag { font-size: 1rem; }
+.theme-name {
+  font-family: Inter, sans-serif;
+  font-size: 1.18rem;
+  color: var(--accent);
+  font-weight: 400;
+}
+.theme-name-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-3);
+  margin-bottom: 14px;
+}
+.sector-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.sector-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--bg-raised);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.filter-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.filter-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+.filter-badge.us-badge { background: var(--accent-dim); color: var(--accent); }
+.filter-badge.cn-badge { background: var(--china-dim); color: var(--china-red); }
+
+.theme-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+.theme-card:hover .theme-details { max-height: 200px; }
+.theme-details-inner {
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+}
+.filter-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  padding: 3px 0;
+  color: var(--text-2);
+}
+.filter-value { color: var(--accent); }
+
+/* ===== Tab 6: Tech & Quality ===== */
+.quality-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+.test-badges {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.test-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  flex: 1;
+  min-width: 140px;
+}
+.test-badge-num {
+  font-family: Inter, sans-serif;
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--green);
+  line-height: 1;
+}
+.test-badge-label {
+  font-size: 0.95rem;
+  color: var(--text-2);
+}
+
+.coverage-bar-wrap { margin-bottom: 14px; }
+.coverage-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+}
+.coverage-label span:first-child {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.86rem;
+  color: var(--text-2);
+}
+.coverage-label span:last-child {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.86rem;
+  color: var(--accent);
+}
+.coverage-track {
+  height: 6px;
+  background: var(--bg-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.coverage-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.2s cubic-bezier(0.16,1,0.3,1);
+}
+.coverage-fill.copper { background: linear-gradient(90deg, var(--accent), #d4aa7a); }
+.coverage-fill.sage { background: linear-gradient(90deg, var(--green), #9ad09a); }
+.coverage-fill.teal { background: linear-gradient(90deg, var(--teal), #8abcbc); }
+
+/* DB tables */
+.db-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 48px;
+}
+.db-table-card { padding: 18px 20px; }
+.db-table-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  color: var(--accent);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.db-col {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  padding: 3px 0;
+  display: flex;
+  justify-content: space-between;
+}
+.db-col-type { color: var(--text-3); font-size: 0.76rem; }
+.db-col-key { color: var(--accent); }
+
+/* Deploy */
+.deploy-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+.deploy-node {
+  text-align: center;
+  padding: 20px 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 130px;
+  transition: border-color 0.2s;
+}
+.deploy-node:hover { border-color: var(--border-hover); }
+.deploy-node-icon { font-size: 1.4rem; margin-bottom: 8px; }
+.deploy-node-name { font-weight: 600; font-size: 0.95rem; color: var(--fg); }
+.deploy-node-detail {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.deploy-arrow { color: var(--text-3); font-size: 1rem; }
+
+/* Env badges */
+.env-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.env-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.84rem;
+  color: var(--text-2);
+}
+.env-badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Script grid */
+.script-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+.script-item {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.script-cmd {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+.script-desc {
+  font-size: 0.84rem;
+  color: var(--text-3);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .signal-grid { grid-template-columns: repeat(2, 1fr); }
+  .quality-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .themes-grid { grid-template-columns: 1fr; }
+  .tab-btn { padding: 14px 10px; font-size: 0.88rem; }
+  .header-inner { height: 52px; }
+  .header { padding: 0 16px; }
+  .container { padding: 32px 16px 64px; }
+  .hero { padding: 40px 0 32px; }
+  .hero h1 { font-size: 2rem; }
+  .deploy-flow { flex-direction: column; }
+  .deploy-arrow { transform: rotate(90deg); }
+  .section-title { font-size: 1.5rem; }
+  .browser-content { grid-template-columns: 1fr; }
+  .mock-sidebar { display: none; }
+  .workflow-grid { grid-template-columns: repeat(2, 1fr); }
+  .workflow-step:nth-child(2)::after { display: none; }
+}
+@media (max-width: 640px) {
+  .feature-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .signal-grid { grid-template-columns: 1fr; }
+  .db-grid { grid-template-columns: 1fr; }
+  .tech-grid { grid-template-columns: 1fr; }
+  .workflow-grid { grid-template-columns: 1fr; }
+  .workflow-step::after { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="starfield" id="starfield"></div>
+
+<!-- ===== Header ===== -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">IA</div>
+      <span>Invest App</span>
+    </div>
+    <nav class="tab-nav" id="tabNav">
+      <button class="tab-btn active" data-tab="overview">
+        <span data-en="Overview" data-zh="概览"></span>
+      </button>
+      <button class="tab-btn" data-tab="signals">
+        <span data-en="Signal Engine" data-zh="信号矩阵"></span>
+      </button>
+      <button class="tab-btn" data-tab="pipeline">
+        <span data-en="Data Pipeline" data-zh="数据流"></span>
+      </button>
+      <button class="tab-btn" data-tab="architecture">
+        <span data-en="Architecture" data-zh="架构"></span>
+      </button>
+      <button class="tab-btn" data-tab="themes">
+        <span data-en="Theme Presets" data-zh="主题筛选"></span>
+      </button>
+      <button class="tab-btn" data-tab="quality">
+        <span data-en="Tech & Quality" data-zh="技术栈"></span>
+      </button>
+    </nav>
+    <button class="lang-toggle" id="langToggle" onclick="toggleLang()">EN / 中</button>
+  </div>
+</header>
+
+<main class="container">
+
+<!-- ==================== Tab 1: Overview ==================== -->
+<section class="tab-content active" id="tab-overview">
+  <!-- Hero -->
+  <div class="hero">
+    <h1 data-en="Investment Signal Engine" data-zh="投资信号引擎"></h1>
+    <p class="subtitle" data-en="A bilingual investment signal dashboard scoring US and A-share stocks on an 8-dimension signal matrix with BUY / HOLD / SELL decisions." data-zh="双语投资信号仪表盘，基于8维信号矩阵对美股和A股进行评分，输出买入/持有/卖出决策。"></p>
+    <p style="margin-top:10px;font-size:0.88rem;color:var(--text-3);">
+      <span data-en="Live at" data-zh="在线访问"></span>
+      <span style="color:var(--accent);font-family:'JetBrains Mono',monospace;">invest.beluga-tempo.com</span>
+    </p>
+    <!-- Stats pills inline in hero -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">10</div>
+        <div class="stat-label" data-en="Theme Presets" data-zh="主题筛选"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">8</div>
+        <div class="stat-label" data-en="Signal Dimensions" data-zh="信号维度"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">125+</div>
+        <div class="stat-label" data-en="Tests" data-zh="测试用例"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">2</div>
+        <div class="stat-label" data-en="Markets" data-zh="市场"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature cards -->
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon-lg">📊</div>
+      <h3 data-en="8-Dimension Signal Matrix" data-zh="8维信号矩阵"></h3>
+      <p data-en="Valuation, Growth, Margins, Trend, Momentum, Pattern, Catalyst, and Sentiment — each scored -1 / 0 / +1 for a total range of -8 to +8." data-zh="估值、增长、利润率、趋势、动量、形态、催化剂、情绪 — 每项评分 -1 / 0 / +1，总分范围 -8 至 +8。"></p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-lg">🌐</div>
+      <h3 data-en="Bilingual & Dual Market" data-zh="双语双市场"></h3>
+      <p data-en="Full Chinese + English UI. Screens both US stocks and A-shares with market-aware sentiment routing (Reddit vs Xueqiu)." data-zh="完整中英双语界面。同时筛选美股与A股，市场感知的情绪路由（Reddit vs 雪球）。"></p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-lg">🤖</div>
+      <h3 data-en="AI Investment Thesis" data-zh="AI 投资论点"></h3>
+      <p data-en="One-click AI-generated investment theses via Claude, GPT, or DeepSeek. Provider-agnostic LLM abstraction layer." data-zh="一键生成 AI 投资论点，支持 Claude、GPT 或 DeepSeek。供应商无关的 LLM 抽象层。"></p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-lg">⏰</div>
+      <h3 data-en="Automated Monitoring" data-zh="自动化监控"></h3>
+      <p data-en="Cron-scheduled re-screens, 30-second polling, catalyst calendar tracking. Runs on Vercel with Turso edge database." data-zh="定时自动重新筛选，30秒轮询更新，催化剂日历追踪。运行在 Vercel + Turso 边缘数据库。"></p>
+    </div>
+  </div>
+
+  <!-- Horizontal workflow -->
+  <h2 class="section-title" data-en="Investment Workflow" data-zh="投资工作流"></h2>
+  <div class="workflow-grid">
+    <div class="workflow-step">
+      <div class="workflow-num">1</div>
+      <h3 data-en="Discover" data-zh="发现"></h3>
+      <p data-en="Run themed stock screens via TradingView API with sector filters, margin thresholds, and market cap minimums." data-zh="通过 TradingView API 运行主题股票筛选，使用行业过滤器、利润率阈值和市值下限。"></p>
+    </div>
+    <div class="workflow-step">
+      <div class="workflow-num">2</div>
+      <h3 data-en="Analyze" data-zh="分析"></h3>
+      <p data-en="Score each candidate on the 8-dimension signal matrix. Each dimension produces -1, 0, or +1." data-zh="对每个候选股票进行8维信号矩阵评分。每个维度产生 -1、0 或 +1。"></p>
+    </div>
+    <div class="workflow-step">
+      <div class="workflow-num">3</div>
+      <h3 data-en="Decide" data-zh="决策"></h3>
+      <p data-en="Aggregate scores into ratings: Strong Buy to Strong Sell. Calculate entry, target, and stop levels." data-zh="汇总评分为评级：强烈买入至强烈卖出。计算入场区间、目标价和止损位。"></p>
+    </div>
+    <div class="workflow-step">
+      <div class="workflow-num">4</div>
+      <h3 data-en="Monitor" data-zh="监控"></h3>
+      <p data-en="Cron-scheduled re-screens, 30s polling, AI-generated investment theses via LLM abstraction." data-zh="定时自动重新筛选，30秒轮询更新，通过 LLM 抽象层生成 AI 投资论点。"></p>
+    </div>
+  </div>
+
+  <!-- Browser mockup -->
+  <div class="browser-mockup">
+    <div class="browser-bar">
+      <span class="browser-dot r"></span>
+      <span class="browser-dot y"></span>
+      <span class="browser-dot g"></span>
+      <span class="browser-url">invest.beluga-tempo.com</span>
+    </div>
+    <div class="browser-content">
+      <!-- Sidebar -->
+      <div class="mock-sidebar">
+        <div class="mock-sidebar-logo">IA 投资决策</div>
+        <div class="mock-sidebar-sub">Signal Dashboard</div>
+        <div class="mock-nav-item active">📊 <span data-en="Dashboard" data-zh="仪表盘"></span></div>
+        <div class="mock-nav-item">🔍 <span data-en="Screens" data-zh="筛选"></span></div>
+        <div class="mock-nav-item">📋 <span data-en="History" data-zh="历史"></span></div>
+      </div>
+      <!-- Main area -->
+      <div class="mock-main">
+        <div class="mock-title" data-en="AI Infrastructure — Signal Matrix" data-zh="AI 基础设施 — 信号矩阵"></div>
+        <table class="mock-table">
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th data-en="Score" data-zh="评分"></th>
+              <th data-en="Rating" data-zh="评级"></th>
+              <th>Val</th>
+              <th>Gro</th>
+              <th>Mar</th>
+              <th>Tre</th>
+              <th>Mom</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--fg-strong);font-weight:600;">NVDA</td>
+              <td style="color:#76b900;font-weight:600;">+6</td>
+              <td><span class="mock-badge buy" data-en="Strong Buy" data-zh="强烈买入"></span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--fg-strong);font-weight:600;">AVGO</td>
+              <td style="color:#76b900;font-weight:600;">+4</td>
+              <td><span class="mock-badge buy" data-en="Buy" data-zh="买入"></span></td>
+              <td><span class="mock-signal neu">0</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--fg-strong);font-weight:600;">TSM</td>
+              <td style="color:#5ba4f5;font-weight:600;">+3</td>
+              <td><span class="mock-badge lean" data-en="Lean Buy" data-zh="偏多"></span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal neu">0</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal neu">0</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--fg-strong);font-weight:600;">AAPL</td>
+              <td style="color:#5a7fa0;font-weight:600;">0</td>
+              <td><span class="mock-badge hold" data-en="Hold" data-zh="持有"></span></td>
+              <td><span class="mock-signal neg">-1</span></td>
+              <td><span class="mock-signal neu">0</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+              <td><span class="mock-signal neu">0</span></td>
+              <td><span class="mock-signal neu">0</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--fg-strong);font-weight:600;">INTC</td>
+              <td style="color:#f5a623;font-weight:600;">-2</td>
+              <td><span class="mock-badge sell" data-en="Sell" data-zh="卖出"></span></td>
+              <td><span class="mock-signal neg">-1</span></td>
+              <td><span class="mock-signal neg">-1</span></td>
+              <td><span class="mock-signal neu">0</span></td>
+              <td><span class="mock-signal neg">-1</span></td>
+              <td><span class="mock-signal pos">+1</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Tab 2: Signal Engine ==================== -->
+<section class="tab-content" id="tab-signals">
+  <h2 class="section-title" data-en="8-Dimension Signal Matrix" data-zh="8维信号矩阵"></h2>
+
+  <div class="signal-grid">
+    <div class="card signal-card card-lift">
+      <div class="signal-header">
+        <div class="signal-icon">📊</div>
+        <div>
+          <div class="signal-name" data-en="Valuation" data-zh="估值"></div>
+          <div class="signal-name-sub">P/E vs Screen</div>
+        </div>
+      </div>
+      <div class="signal-thresholds">
+        +1: P/E &lt; 0.8× median<br>
+        &nbsp;0: ±20% of median<br>
+        −1: P/E &gt; 75th pctl
+      </div>
+      <div class="signal-indicators">
+        <span class="sig-dot sig-neg">−1</span>
+        <span class="sig-dot sig-neu">0</span>
+        <span class="sig-dot sig-pos">+1</span>
+      </div>
+    </div>
+
+    <div class="card signal-card card-lift">
+      <div class="signal-header">
+        <div class="signal-icon">📈</div>
+        <div>
+          <div class="signal-name" data-en="Growth" data-zh="增长"></div>
+          <div class="signal-name-sub">Revenue YoY</div>
+        </div>
+      </div>
+      <div class="signal-thresholds">
+        +1: Rev Growth &gt; 15%<br>
+        &nbsp;0: 5% – 15%<br>
+        −1: Rev Growth &lt; 5%
+      </div>
+      <div class="signal-indicators">
+        <span class="sig-dot sig-neg">−1</span>
+        <span class="sig-dot sig-neu">0</span>
+        <span class="sig-dot sig-pos">+1</span>
+      </div>
+    </div>
+
+    <div class="card signal-card card-lift">
+      <div class="signal-header">
+        <div class="signal-icon">💰</div>
+        <div>
+          <div class="signal-name" data-en="Margins" data-zh="利润率"></div>
+          <div class="signal-name-sub">Gross + FCF</div>
+        </div>
+      </div>
+      <div class="signal-thresholds">
+        +1: GM &gt; 40% &amp; FCF &gt; 0<br>
+        &nbsp;0: GM 20%–40%<br>
+        −1: GM &lt; 20% or FCF &lt; 0
+      </div>
+      <div class="signal-indicators">
+        <span class="sig-dot sig-neg">−1</span>
+        <span class="sig-dot sig-neu">0</span>
+        <span class="sig-dot sig-pos">+1</span>
+      </div>
+    </div>
+
+    <div class="card signal-card card-lift">
+      <div class="signal-header">
+        <div class="signal-icon">〰️</div>
+        <div>
+          <div class="signal-name" data-en="Trend" data-zh="趋势"></div>
+          <div class="signal-name-sub">SMA Alignment</div>
+        </div>
+      </div>
+      <div class="signal-thresholds">
+        +1: Close &gt; SMA200, 50 &gt; 200<br>
+        &nbsp;0: Crossover state<br>
+        −1: Close &lt; SMA200
+      </div>
+      <div class="signal-indicators">
+        <span class="sig-dot sig-neg">−1</span>
+        <span class="sig-dot sig-neu">0</span>
+        <span class="sig-dot sig-pos">+1</span>
+      </div>
+    </div>
+
+    <div class="card signal-card card-lift">
+      <div class="signal-header">
+        <div class="signal-icon">⚡</div>
+        <div>
+          <div class="signal-name" data-en="Momentum" data-zh="动量"></div>
+          <div class="signal-name-sub">RSI + 52w High</div>
+        </div>
+      </div>
+      <div class="signal-thresholds">
+        +1: RSI 35–55 (recovery)<br>
+        &nbsp;0: RSI 40–60<br>
+        −1: RSI &gt; 70 near 52w high
+      </div>
+      <div class="signal-indicators">
+        <span class="sig-dot sig-neg">−1</span>
+        <span class="sig-dot sig-neu">0</span>
+        <span class="sig-dot sig-pos">+1</span>
+      </div>
+    </div>
+
+    <div class="card signal-card card-lift">
+      <div class="signal-header">
+        <div class="signal-icon">🔍</div>
+        <div>
+          <div class="signal-name" data-en="Pattern" data-zh="形态"></div>
+          <div class="signal-name-sub">ADX + Proximity</div>
+        </div>
+      </div>
+      <div class="signal-thresholds">
+        +1: ADX &gt; 25, ≤10% of 52w hi<br>
+        &nbsp;0: ADX 15–25<br>
+        −1: ADX &lt; 15 (no trend)
+      </div>
+      <div class="signal-indicators">
+        <span class="sig-dot sig-neg">−1</span>
+        <span class="sig-dot sig-neu">0</span>
+        <span class="sig-dot sig-pos">+1</span>
+      </div>
+    </div>
+
+    <div class="card signal-card card-lift">
+      <div class="signal-header">
+        <div class="signal-icon">📅</div>
+        <div>
+          <div class="signal-name" data-en="Catalyst" data-zh="催化剂"></div>
+          <div class="signal-name-sub">Earnings Proximity</div>
+        </div>
+      </div>
+      <div class="signal-thresholds">
+        +1: AI thesis override<br>
+        &nbsp;0: ≤30d or &gt;60d (default)<br>
+        −1: Binary risk override
+      </div>
+      <div class="signal-indicators">
+        <span class="sig-dot sig-neg">−1</span>
+        <span class="sig-dot sig-neu">0</span>
+        <span class="sig-dot sig-pos">+1</span>
+      </div>
+    </div>
+
+    <div class="card signal-card card-lift">
+      <div class="signal-header">
+        <div class="signal-icon">💬</div>
+        <div>
+          <div class="signal-name" data-en="Sentiment" data-zh="情绪"></div>
+          <div class="signal-name-sub">Reddit / Xueqiu</div>
+        </div>
+      </div>
+      <div class="signal-thresholds">
+        +1: Rank ≤100, rising 1.2×<br>
+        &nbsp;0: Stable / no data<br>
+        −1: Rank ≤20, fading &lt;0.7×
+      </div>
+      <div class="signal-indicators">
+        <span class="sig-dot sig-neg">−1</span>
+        <span class="sig-dot sig-neu">0</span>
+        <span class="sig-dot sig-pos">+1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Example stocks -->
+  <h2 class="section-title" data-en="Scoring Example" data-zh="评分示例"></h2>
+  <div style="overflow-x: auto;">
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th data-en="Stock" data-zh="股票"></th>
+          <th data-en="Val" data-zh="估值"></th>
+          <th data-en="Grw" data-zh="增长"></th>
+          <th data-en="Mar" data-zh="利润"></th>
+          <th data-en="Trd" data-zh="趋势"></th>
+          <th data-en="Mom" data-zh="动量"></th>
+          <th data-en="Pat" data-zh="形态"></th>
+          <th data-en="Cat" data-zh="催化"></th>
+          <th data-en="Sen" data-zh="情绪"></th>
+          <th data-en="Total" data-zh="总分"></th>
+          <th data-en="Rating" data-zh="评级"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>NVDA — NVIDIA</td>
+          <td class="cell-neg">−1</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-neu">0</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-pos" style="font-weight:600;">+5</td>
+          <td><span style="background:var(--accent-dim);color:var(--accent);padding:3px 10px;border-radius:4px;font-size:0.72rem;" data-en="BUY" data-zh="买入"></span></td>
+        </tr>
+        <tr>
+          <td>AAPL — Apple</td>
+          <td class="cell-neu">0</td>
+          <td class="cell-neg">−1</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-neu">0</td>
+          <td class="cell-neu">0</td>
+          <td class="cell-neu">0</td>
+          <td class="cell-neu">0</td>
+          <td class="cell-pos" style="font-weight:600;">+1</td>
+          <td><span style="background:var(--blue-dim);color:var(--blue);padding:3px 10px;border-radius:4px;font-size:0.72rem;" data-en="LEAN BUY" data-zh="偏多"></span></td>
+        </tr>
+        <tr>
+          <td>INTC — Intel</td>
+          <td class="cell-pos">+1</td>
+          <td class="cell-neg">−1</td>
+          <td class="cell-neg">−1</td>
+          <td class="cell-neg">−1</td>
+          <td class="cell-neu">0</td>
+          <td class="cell-neg">−1</td>
+          <td class="cell-neu">0</td>
+          <td class="cell-neg">−1</td>
+          <td class="cell-neg" style="font-weight:600;">−4</td>
+          <td><span style="background:var(--red-dim);color:var(--red);padding:3px 10px;border-radius:4px;font-size:0.72rem;" data-en="STRONG SELL" data-zh="强烈卖出"></span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Rating scale -->
+  <h2 class="section-title" data-en="Rating Scale" data-zh="评级刻度"></h2>
+  <div class="rating-scale">
+    <div class="rating-segment" style="flex:5;background:var(--red-dim);color:var(--red);">
+      <span data-en="STRONG SELL" data-zh="强烈卖出"></span>
+    </div>
+    <div class="rating-segment" style="flex:2;background:rgba(212,160,74,0.15);color:var(--orange);">
+      <span data-en="SELL" data-zh="卖出"></span>
+    </div>
+    <div class="rating-segment" style="flex:2;background:rgba(122,120,160,0.12);color:#9a96b0;">
+      <span data-en="HOLD" data-zh="持有"></span>
+    </div>
+    <div class="rating-segment" style="flex:3;background:var(--blue-dim);color:var(--blue);">
+      <span data-en="LEAN BUY" data-zh="偏多"></span>
+    </div>
+    <div class="rating-segment" style="flex:2;background:var(--accent-dim);color:var(--accent);">
+      <span data-en="BUY" data-zh="买入"></span>
+    </div>
+    <div class="rating-segment" style="flex:3;background:var(--green-dim);color:var(--green);">
+      <span data-en="STRONG BUY" data-zh="强烈买入"></span>
+    </div>
+  </div>
+  <div class="rating-labels">
+    <span>−8</span><span>−4</span><span>−2</span><span>0</span><span>+3</span><span>+5</span><span>+8</span>
+  </div>
+</section>
+
+<!-- ==================== Tab 3: Data Pipeline ==================== -->
+<section class="tab-content" id="tab-pipeline">
+  <h2 class="section-title" data-en="Data Pipeline" data-zh="数据流"></h2>
+
+  <div class="pipeline-container">
+    <svg class="pipeline-svg" viewBox="0 0 960 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <path id="a1" d="M170 120 L310 120" fill="none"/>
+        <path id="a2" d="M420 120 L520 72" fill="none"/>
+        <path id="a3" d="M420 120 L520 168" fill="none"/>
+        <path id="a4" d="M620 72 L700 120" fill="none"/>
+        <path id="a5" d="M620 168 L700 120" fill="none"/>
+        <path id="a6" d="M810 120 L900 120" fill="none"/>
+      </defs>
+
+      <!-- Flow lines -->
+      <line x1="170" y1="120" x2="310" y2="120" class="flow-line"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.8s" repeatCount="indefinite"/></line>
+      <line x1="420" y1="120" x2="520" y2="72" class="flow-line"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.8s" repeatCount="indefinite"/></line>
+      <line x1="420" y1="120" x2="520" y2="168" class="flow-line"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.8s" repeatCount="indefinite"/></line>
+      <line x1="620" y1="72" x2="700" y2="120" class="flow-line"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.8s" repeatCount="indefinite"/></line>
+      <line x1="620" y1="168" x2="700" y2="120" class="flow-line"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.8s" repeatCount="indefinite"/></line>
+      <line x1="810" y1="120" x2="900" y2="120" class="flow-line"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.8s" repeatCount="indefinite"/></line>
+      <path d="M 810 138 L 810 290 L 560 290" class="flow-line" fill="none"><animate attributeName="stroke-dashoffset" from="20" to="0" dur="2.2s" repeatCount="indefinite"/></path>
+
+      <!-- Particles -->
+      <circle r="3" class="flow-particle" filter="url(#glow)"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#a1"/></animateMotion></circle>
+      <circle r="2.5" class="flow-particle" filter="url(#glow)"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#a2"/></animateMotion></circle>
+      <circle r="2.5" class="flow-particle" filter="url(#glow)"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#a3"/></animateMotion></circle>
+      <circle r="2.5" class="flow-particle" filter="url(#glow)"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#a4"/></animateMotion></circle>
+      <circle r="2.5" class="flow-particle" filter="url(#glow)"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#a5"/></animateMotion></circle>
+      <circle r="3" class="flow-particle" filter="url(#glow)"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#a6"/></animateMotion></circle>
+
+      <!-- Nodes -->
+      <g class="pipeline-node" onclick="showDetail('tv')">
+        <rect x="40" y="88" width="130" height="64" rx="8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1.2"/>
+        <text x="105" y="114" class="pipeline-label" data-en="TradingView" data-zh="TradingView">TradingView</text>
+        <text x="105" y="134" class="pipeline-sublabel">scan API</text>
+      </g>
+      <g class="pipeline-node" onclick="showDetail('screener')">
+        <rect x="310" y="88" width="110" height="64" rx="8" fill="rgba(255,255,255,0.05)" stroke="#e8b84b" stroke-width="1.2" stroke-opacity="0.4"/>
+        <text x="365" y="114" class="pipeline-label" data-en="Screener" data-zh="筛选器">Screener</text>
+        <text x="365" y="134" class="pipeline-sublabel">21 fields</text>
+      </g>
+      <g class="pipeline-node" onclick="showDetail('reddit')">
+        <rect x="520" y="44" width="100" height="56" rx="8" fill="rgba(255,255,255,0.05)" stroke="#7aa8d4" stroke-width="1.2" stroke-opacity="0.4"/>
+        <text x="570" y="66" class="pipeline-label" style="font-size:12px;" data-en="Reddit" data-zh="Reddit">Reddit</text>
+        <text x="570" y="84" class="pipeline-sublabel">🇺🇸 US</text>
+      </g>
+      <g class="pipeline-node" onclick="showDetail('xueqiu')">
+        <rect x="520" y="140" width="100" height="56" rx="8" fill="rgba(255,255,255,0.05)" stroke="#e07070" stroke-width="1.2" stroke-opacity="0.4"/>
+        <text x="570" y="162" class="pipeline-label" style="font-size:12px;" data-en="Xueqiu" data-zh="雪球">Xueqiu</text>
+        <text x="570" y="180" class="pipeline-sublabel">🇨🇳 A-share</text>
+      </g>
+      <g class="pipeline-node" onclick="showDetail('scorer')">
+        <rect x="700" y="88" width="110" height="64" rx="8" fill="rgba(255,255,255,0.05)" stroke="#e8b84b" stroke-width="1.2" stroke-opacity="0.5"/>
+        <text x="755" y="114" class="pipeline-label" data-en="Scorer" data-zh="评分器">Scorer</text>
+        <text x="755" y="134" class="pipeline-sublabel">8 dimensions</text>
+      </g>
+      <g class="pipeline-node" onclick="showDetail('db')">
+        <rect x="460" y="262" width="100" height="56" rx="8" fill="rgba(255,255,255,0.05)" stroke="#7ab87a" stroke-width="1.2" stroke-opacity="0.4"/>
+        <text x="510" y="284" class="pipeline-label" style="font-size:12px;" data-en="libSQL" data-zh="libSQL">libSQL</text>
+        <text x="510" y="302" class="pipeline-sublabel">Turso</text>
+      </g>
+      <g class="pipeline-node" onclick="showDetail('dashboard')">
+        <rect x="860" y="88" width="90" height="64" rx="8" fill="rgba(255,255,255,0.05)" stroke="#9a8abf" stroke-width="1.2" stroke-opacity="0.4"/>
+        <text x="905" y="114" class="pipeline-label" style="font-size:11px;" data-en="Dashboard" data-zh="仪表盘">Dashboard</text>
+        <text x="905" y="134" class="pipeline-sublabel">Next.js</text>
+      </g>
+
+      <!-- Labels -->
+      <text x="240" y="110" class="pipeline-sublabel" data-en="HTTP POST" data-zh="HTTP POST">HTTP POST</text>
+      <text x="478" y="60" class="pipeline-sublabel" style="font-size:9px;">sentiment</text>
+      <text x="478" y="168" class="pipeline-sublabel" style="font-size:9px;">sentiment</text>
+      <text x="856" y="108" class="pipeline-sublabel" style="font-size:9px;">poll 30s</text>
+      <text x="710" y="286" class="pipeline-sublabel" style="font-size:9px;" data-en="persist" data-zh="持久化">persist</text>
+    </svg>
+  </div>
+
+  <!-- Detail panels (same content, restyled) -->
+  <div class="detail-panel" id="detail-tv">
+    <h3>TradingView Scan API</h3>
+    <p data-en="Direct HTTP POST to scanner.tradingview.com/{market}/scan" data-zh="直接 HTTP POST 到 scanner.tradingview.com/{market}/scan"></p>
+    <p data-en="Markets: america, china — No auth required" data-zh="市场：america, china — 无需认证"></p>
+    <div style="margin-top:10px;">
+      <span class="detail-tag">market_cap_basic</span><span class="detail-tag">price_earnings_ttm</span><span class="detail-tag">gross_margin_ttm</span><span class="detail-tag">RSI</span><span class="detail-tag">ADX</span><span class="detail-tag">SMA50</span><span class="detail-tag">SMA200</span>
+    </div>
+  </div>
+  <div class="detail-panel" id="detail-screener">
+    <h3 data-en="Screener (lib/screener.ts)" data-zh="筛选器 (lib/screener.ts)"></h3>
+    <p data-en="Requests 21 fields from TradingView, maps to RawStockData interface" data-zh="向 TradingView 请求21个字段，映射到 RawStockData 接口"></p>
+    <p data-en="Normalizes margins & growth: TradingView percentage (0-100) → decimal (0-1)" data-zh="标准化利润率和增长率：TradingView 百分比 (0-100) → 小数 (0-1)"></p>
+    <p data-en="Deduplicates by company name — keeps highest market cap listing" data-zh="按公司名去重 — 保留市值最高的上市版本"></p>
+  </div>
+  <div class="detail-panel" id="detail-reddit">
+    <h3>Reddit Sentiment (ApeWisdom)</h3>
+    <p data-en="Source: ApeWisdom API for US stocks" data-zh="来源：ApeWisdom API，用于美股"></p>
+    <p data-en="Fields: rank, mentions (24h), mentions_prev (24h ago)" data-zh="字段：排名、提及数（24小时）、前一日提及数"></p>
+    <p data-en="Rising heat: rank ≤100 AND mentions/prev > 1.2×" data-zh="热度上升：排名 ≤100 且 提及/前值 > 1.2×"></p>
+  </div>
+  <div class="detail-panel" id="detail-xueqiu">
+    <h3 data-en="Xueqiu Sentiment (雪球)" data-zh="雪球情绪"></h3>
+    <p data-en="Source: Xueqiu API for A-share stocks" data-zh="来源：雪球 API，用于A股"></p>
+    <p data-en="Market-aware routing in lib/sentiment.ts" data-zh="lib/sentiment.ts 中的市场感知路由"></p>
+  </div>
+  <div class="detail-panel" id="detail-scorer">
+    <h3 data-en="Signal Scorer (lib/signal-scorer.ts)" data-zh="信号评分器 (lib/signal-scorer.ts)"></h3>
+    <p data-en="Pure functions — no side effects, no I/O" data-zh="纯函数 — 无副作用、无 I/O"></p>
+    <p data-en="8 scoring functions, each returns -1 | 0 | +1" data-zh="8个评分函数，每个返回 -1 | 0 | +1"></p>
+    <p data-en="Screen-relative valuation: computes median & P75 P/E from candidate pool" data-zh="基于筛选结果的相对估值：从候选池计算中位数和P75市盈率"></p>
+    <p data-en="100% test coverage — 71 unit tests" data-zh="100% 测试覆盖率 — 71个单元测试"></p>
+  </div>
+  <div class="detail-panel" id="detail-db">
+    <h3>libSQL / Turso</h3>
+    <p data-en="5 tables: themes, screen_runs, stock_snapshots, watchlist, decisions" data-zh="5张表：themes, screen_runs, stock_snapshots, watchlist, decisions"></p>
+    <p data-en="Local dev: SQLite file (./data/invest.db)" data-zh="本地开发：SQLite 文件 (./data/invest.db)"></p>
+    <p data-en="Production: Turso cloud (aws-us-east-1)" data-zh="生产环境：Turso 云 (aws-us-east-1)"></p>
+  </div>
+  <div class="detail-panel" id="detail-dashboard">
+    <h3 data-en="Dashboard (Next.js 16)" data-zh="仪表盘 (Next.js 16)"></h3>
+    <p data-en="Server Components by default — 'use client' only when needed" data-zh="默认使用服务器组件 — 仅在需要时使用 'use client'"></p>
+    <p data-en="Polling: 30s interval for dashboard updates" data-zh="轮询：每30秒更新仪表盘"></p>
+    <p data-en="LLM abstraction: Anthropic / OpenAI / DeepSeek via Vercel AI SDK" data-zh="LLM 抽象层：Anthropic / OpenAI / DeepSeek 通过 Vercel AI SDK"></p>
+  </div>
+</section>
+
+<!-- ==================== Tab 4: Architecture ==================== -->
+<section class="tab-content" id="tab-architecture">
+  <h2 class="section-title" data-en="Architecture" data-zh="架构"></h2>
+
+  <div style="overflow-x:auto;">
+    <svg class="arch-svg" viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg">
+      <text x="20" y="30" font-family="JetBrains Mono" font-size="10" fill="#9a96b0" font-weight="500" letter-spacing="0.08em">UI LAYER</text>
+      <text x="20" y="170" font-family="JetBrains Mono" font-size="10" fill="#9a96b0" font-weight="500" letter-spacing="0.08em">LOGIC LAYER</text>
+      <text x="20" y="320" font-family="JetBrains Mono" font-size="10" fill="#9a96b0" font-weight="500" letter-spacing="0.08em">DATA LAYER</text>
+      <text x="20" y="440" font-family="JetBrains Mono" font-size="10" fill="#9a96b0" font-weight="500" letter-spacing="0.08em">EXTERNAL</text>
+
+      <line x1="20" y1="145" x2="940" y2="145" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="20" y1="295" x2="940" y2="295" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="20" y1="420" x2="940" y2="420" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3 3"/>
+
+      <!-- UI -->
+      <rect x="120" y="45" width="160" height="40" rx="6" fill="rgba(255,255,255,0.05)" stroke="#7aa8d4" stroke-width="1.2" stroke-opacity="0.4"/>
+      <text x="200" y="70" class="arch-label" style="fill:#7aa8d4;">Next.js App Router</text>
+      <rect x="340" y="45" width="100" height="40" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="390" y="65" class="arch-sublabel" style="fill:#7aa8d4;">page.tsx</text><text x="390" y="78" class="arch-sublabel">Dashboard</text>
+      <rect x="460" y="45" width="100" height="40" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="510" y="65" class="arch-sublabel" style="fill:#7aa8d4;">layout.tsx</text><text x="510" y="78" class="arch-sublabel">Fonts + Theme</text>
+      <rect x="580" y="45" width="100" height="40" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="630" y="65" class="arch-sublabel" style="fill:#7aa8d4;">globals.css</text><text x="630" y="78" class="arch-sublabel">Starry Blue</text>
+
+      <rect x="120" y="100" width="120" height="35" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="180" y="122" class="arch-sublabel" style="fill:#7aa8d4;">api/screen</text>
+      <rect x="260" y="100" width="120" height="35" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="320" y="122" class="arch-sublabel" style="fill:#7aa8d4;">api/cron</text>
+      <rect x="400" y="100" width="120" height="35" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="460" y="122" class="arch-sublabel" style="fill:#7aa8d4;">api/thesis</text>
+      <rect x="540" y="100" width="120" height="35" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="600" y="122" class="arch-sublabel" style="fill:#7aa8d4;">proxy.ts</text>
+
+      <!-- Logic -->
+      <rect x="120" y="185" width="130" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="#e8b84b" stroke-width="1.2" stroke-opacity="0.5"/>
+      <text x="185" y="205" class="arch-label" style="fill:#e8b84b;font-size:10px;">signal-scorer.ts</text><text x="185" y="220" class="arch-sublabel">8 scoring functions</text>
+      <rect x="270" y="185" width="110" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="325" y="205" class="arch-sublabel" style="fill:#e8b84b;">screener.ts</text><text x="325" y="220" class="arch-sublabel">TV API client</text>
+      <rect x="400" y="185" width="110" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="455" y="205" class="arch-sublabel" style="fill:#e8b84b;">sentiment.ts</text><text x="455" y="220" class="arch-sublabel">Market router</text>
+      <rect x="530" y="185" width="100" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="580" y="205" class="arch-sublabel" style="fill:#e8b84b;">llm.ts</text><text x="580" y="220" class="arch-sublabel">AI SDK</text>
+      <rect x="650" y="185" width="100" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="700" y="205" class="arch-sublabel" style="fill:#e8b84b;">themes.ts</text><text x="700" y="220" class="arch-sublabel">10 presets</text>
+      <rect x="770" y="185" width="100" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="820" y="205" class="arch-sublabel" style="fill:#e8b84b;">types.ts</text><text x="820" y="220" class="arch-sublabel">Interfaces</text>
+
+      <rect x="120" y="245" width="130" height="35" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="185" y="267" class="arch-sublabel" style="fill:#e8b84b;">db-operations.ts</text>
+      <rect x="270" y="245" width="130" height="35" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="335" y="267" class="arch-sublabel" style="fill:#e8b84b;">reddit-sentiment.ts</text>
+      <rect x="420" y="245" width="130" height="35" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="485" y="267" class="arch-sublabel" style="fill:#e8b84b;">xueqiu-sentiment.ts</text>
+
+      <!-- Data -->
+      <rect x="120" y="335" width="120" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="#7ab87a" stroke-width="1.2" stroke-opacity="0.4"/>
+      <text x="180" y="355" class="arch-label" style="fill:#7ab87a;font-size:10px;">schema.ts</text><text x="180" y="370" class="arch-sublabel">Drizzle ORM</text>
+      <rect x="260" y="335" width="100" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="310" y="355" class="arch-sublabel" style="fill:#7ab87a;">db.ts</text><text x="310" y="370" class="arch-sublabel">Connection</text>
+      <rect x="380" y="335" width="100" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="430" y="355" class="arch-sublabel" style="fill:#7ab87a;">seed.ts</text><text x="430" y="370" class="arch-sublabel">Theme data</text>
+
+      <!-- External -->
+      <rect x="120" y="450" width="130" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="#9a8abf" stroke-width="1.2" stroke-opacity="0.4"/>
+      <text x="185" y="470" class="arch-label" style="fill:#9a8abf;font-size:10px;">TradingView</text><text x="185" y="485" class="arch-sublabel">scan API</text>
+      <rect x="270" y="450" width="130" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="335" y="470" class="arch-sublabel" style="fill:#9a8abf;">Turso Cloud</text><text x="335" y="485" class="arch-sublabel">aws-us-east-1</text>
+      <rect x="420" y="450" width="130" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="485" y="470" class="arch-sublabel" style="fill:#9a8abf;">LLM Providers</text><text x="485" y="485" class="arch-sublabel">Claude/GPT/DS</text>
+      <rect x="570" y="450" width="130" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="635" y="470" class="arch-sublabel" style="fill:#9a8abf;">ApeWisdom</text><text x="635" y="485" class="arch-sublabel">Reddit API</text>
+      <rect x="720" y="450" width="100" height="45" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <text x="770" y="470" class="arch-sublabel" style="fill:#9a8abf;">Xueqiu</text><text x="770" y="485" class="arch-sublabel">雪球 API</text>
+
+      <!-- Connections (subtle) -->
+      <line x1="200" y1="85" x2="200" y2="100" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <line x1="180" y1="135" x2="185" y2="185" stroke="#e8b84b" stroke-width="1" stroke-opacity="0.15"/>
+      <line x1="320" y1="135" x2="325" y2="185" stroke="#e8b84b" stroke-width="1" stroke-opacity="0.15"/>
+      <line x1="460" y1="135" x2="455" y2="185" stroke="#e8b84b" stroke-width="1" stroke-opacity="0.15"/>
+      <line x1="180" y1="280" x2="180" y2="335" stroke="#7ab87a" stroke-width="1" stroke-opacity="0.15"/>
+      <line x1="310" y1="380" x2="335" y2="450" stroke="#9a8abf" stroke-width="1" stroke-opacity="0.15"/>
+    </svg>
+  </div>
+
+  <!-- Tech Stack -->
+  <h2 class="section-title" style="margin-top:40px;" data-en="Tech Stack" data-zh="技术栈"></h2>
+  <div class="tech-grid">
+    <div class="tech-item"><span class="tech-icon">▲</span><div class="tech-info"><span class="tech-name">Next.js</span><span class="tech-ver">v16.1.6</span></div></div>
+    <div class="tech-item"><span class="tech-icon">⚛</span><div class="tech-info"><span class="tech-name">React</span><span class="tech-ver">v19.2.3</span></div></div>
+    <div class="tech-item"><span class="tech-icon">🗄</span><div class="tech-info"><span class="tech-name">libSQL / Turso</span><span class="tech-ver">v0.14.0</span></div></div>
+    <div class="tech-item"><span class="tech-icon">💧</span><div class="tech-info"><span class="tech-name">Drizzle ORM</span><span class="tech-ver">v0.45.1</span></div></div>
+    <div class="tech-item"><span class="tech-icon">🎨</span><div class="tech-info"><span class="tech-name">Tailwind CSS</span><span class="tech-ver">v4</span></div></div>
+    <div class="tech-item"><span class="tech-icon">🧱</span><div class="tech-info"><span class="tech-name">shadcn/ui</span><span class="tech-ver">v3.8.5</span></div></div>
+    <div class="tech-item"><span class="tech-icon">🧪</span><div class="tech-info"><span class="tech-name">Vitest</span><span class="tech-ver">v4.0.18</span></div></div>
+    <div class="tech-item"><span class="tech-icon">🎭</span><div class="tech-info"><span class="tech-name">Playwright</span><span class="tech-ver">v1.58.2</span></div></div>
+    <div class="tech-item"><span class="tech-icon">🤖</span><div class="tech-info"><span class="tech-name">Vercel AI SDK</span><span class="tech-ver">v6.0</span></div></div>
+    <div class="tech-item"><span class="tech-icon">📊</span><div class="tech-info"><span class="tech-name">Recharts</span><span class="tech-ver">v3.7.0</span></div></div>
+    <div class="tech-item"><span class="tech-icon">📈</span><div class="tech-info"><span class="tech-name">Lightweight Charts</span><span class="tech-ver">v5.1.0</span></div></div>
+    <div class="tech-item"><span class="tech-icon">📦</span><div class="tech-info"><span class="tech-name">TypeScript</span><span class="tech-ver">v5 (strict)</span></div></div>
+  </div>
+</section>
+
+<!-- ==================== Tab 5: Theme Presets ==================== -->
+<section class="tab-content" id="tab-themes">
+  <h2 class="section-title" data-en="Theme Presets" data-zh="主题筛选预设"></h2>
+  <p class="section-subtitle" data-en="5 US market themes + 5 A-share market themes. Hover to expand filter details." data-zh="5个美股主题 + 5个A股主题。悬停展开筛选条件详情。"></p>
+
+  <div class="themes-grid">
+    <div class="card theme-card us card-lift">
+      <div class="theme-header"><span class="theme-flag">🇺🇸</span><span class="theme-name" data-en="AI Infrastructure" data-zh="AI 基础设施"></span></div>
+      <div class="theme-name-sub">ai-infrastructure</div>
+      <div class="sector-chips"><span class="sector-chip">Semiconductors</span><span class="sector-chip">Cloud</span><span class="sector-chip">Data Centers</span><span class="sector-chip">Networking</span></div>
+      <div class="filter-badges"><span class="filter-badge us-badge">MCap &gt; $5B</span><span class="filter-badge us-badge">GM &gt; 40%</span><span class="filter-badge us-badge">Rev Growth &gt; 12%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; $5B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Electronic Tech, Tech Services</span></div>
+        <div class="filter-row"><span>gross_margin_ttm</span><span class="filter-value">&gt; 40%</span></div>
+        <div class="filter-row"><span>revenue_yoy_growth</span><span class="filter-value">&gt; 12%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">06:30 Mon-Fri</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card us card-lift">
+      <div class="theme-header"><span class="theme-flag">🇺🇸</span><span class="theme-name" data-en="Robotics & Automation" data-zh="机器人与自动化"></span></div>
+      <div class="theme-name-sub">robotics</div>
+      <div class="sector-chips"><span class="sector-chip">Industrial Machinery</span><span class="sector-chip">Semi Equipment</span><span class="sector-chip">Electronic Equipment</span></div>
+      <div class="filter-badges"><span class="filter-badge us-badge">MCap &gt; $2B</span><span class="filter-badge us-badge">Rev Growth &gt; 8%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; $2B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Producer Mfg, Electronic Tech</span></div>
+        <div class="filter-row"><span>revenue_yoy_growth</span><span class="filter-value">&gt; 8%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">18:00 Sun</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card us card-lift">
+      <div class="theme-header"><span class="theme-flag">🇺🇸</span><span class="theme-name" data-en="Energy Transition" data-zh="能源转型"></span></div>
+      <div class="theme-name-sub">energy-transition</div>
+      <div class="sector-chips"><span class="sector-chip">Solar</span><span class="sector-chip">Renewables</span><span class="sector-chip">Electrical Equipment</span></div>
+      <div class="filter-badges"><span class="filter-badge us-badge">MCap &gt; $1B</span><span class="filter-badge us-badge">Rev Growth &gt; 5%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; $1B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Utilities, Industrial Svcs, Producer Mfg</span></div>
+        <div class="filter-row"><span>revenue_yoy_growth</span><span class="filter-value">&gt; 5%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">18:00 Sun</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card us card-lift">
+      <div class="theme-header"><span class="theme-flag">🇺🇸</span><span class="theme-name" data-en="Healthcare AI" data-zh="医疗 AI"></span></div>
+      <div class="theme-name-sub">healthcare-ai</div>
+      <div class="sector-chips"><span class="sector-chip">MedTech</span><span class="sector-chip">Health IT</span><span class="sector-chip">Diagnostics</span></div>
+      <div class="filter-badges"><span class="filter-badge us-badge">MCap &gt; $1B</span><span class="filter-badge us-badge">Rev Growth &gt; 10%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; $1B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Health Tech, Health Services</span></div>
+        <div class="filter-row"><span>revenue_yoy_growth</span><span class="filter-value">&gt; 10%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">18:00 Sun</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card us card-lift">
+      <div class="theme-header"><span class="theme-flag">🇺🇸</span><span class="theme-name" data-en="Defense & Reshoring" data-zh="国防与回流"></span></div>
+      <div class="theme-name-sub">defense-reshoring</div>
+      <div class="sector-chips"><span class="sector-chip">Aerospace</span><span class="sector-chip">Specialty Chemicals</span><span class="sector-chip">Defense</span></div>
+      <div class="filter-badges"><span class="filter-badge us-badge">MCap &gt; $2B</span><span class="filter-badge us-badge">Rev Growth &gt; 5%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; $2B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Electronic Tech, Producer Mfg, Industrial Svcs</span></div>
+        <div class="filter-row"><span>revenue_yoy_growth</span><span class="filter-value">&gt; 5%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">18:00 Sun</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card cn card-lift">
+      <div class="theme-header"><span class="theme-flag">🇨🇳</span><span class="theme-name" data-en="A-Share AI Computing" data-zh="AI 算力"></span></div>
+      <div class="theme-name-sub">a-ai-computing</div>
+      <div class="sector-chips"><span class="sector-chip">Semiconductors</span><span class="sector-chip">Cloud</span><span class="sector-chip">Data Centers</span></div>
+      <div class="filter-badges"><span class="filter-badge cn-badge">MCap &gt; ¥20B</span><span class="filter-badge cn-badge">GM &gt; 25%</span><span class="filter-badge cn-badge">Rev Growth &gt; 15%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; ¥20B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Electronic Tech, Tech Services</span></div>
+        <div class="filter-row"><span>gross_margin_ttm</span><span class="filter-value">&gt; 25%</span></div>
+        <div class="filter-row"><span>revenue_yoy_growth</span><span class="filter-value">&gt; 15%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">07:30 Mon-Fri</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card cn card-lift">
+      <div class="theme-header"><span class="theme-flag">🇨🇳</span><span class="theme-name" data-en="New Energy Vehicle" data-zh="新能源车产业链"></span></div>
+      <div class="theme-name-sub">a-new-energy</div>
+      <div class="sector-chips"><span class="sector-chip">EV</span><span class="sector-chip">Batteries</span><span class="sector-chip">Auto Parts</span></div>
+      <div class="filter-badges"><span class="filter-badge cn-badge">MCap &gt; ¥10B</span><span class="filter-badge cn-badge">Rev Growth &gt; 10%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; ¥10B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Producer Mfg, Electronic Tech</span></div>
+        <div class="filter-row"><span>revenue_yoy_growth</span><span class="filter-value">&gt; 10%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">08:00 Fri</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card cn card-lift">
+      <div class="theme-header"><span class="theme-flag">🇨🇳</span><span class="theme-name" data-en="Consumer Leaders" data-zh="消费白马"></span></div>
+      <div class="theme-name-sub">a-consumer-leaders</div>
+      <div class="sector-chips"><span class="sector-chip">Consumer Staples</span><span class="sector-chip">Consumer Durables</span><span class="sector-chip">Beverages</span></div>
+      <div class="filter-badges"><span class="filter-badge cn-badge">MCap &gt; ¥50B</span><span class="filter-badge cn-badge">GM &gt; 30%</span><span class="filter-badge cn-badge">ROE &gt; 15%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; ¥50B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Consumer Non-Durables, Durables</span></div>
+        <div class="filter-row"><span>gross_margin_ttm</span><span class="filter-value">&gt; 30%</span></div>
+        <div class="filter-row"><span>return_on_equity</span><span class="filter-value">&gt; 15%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">08:00 Fri</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card cn card-lift">
+      <div class="theme-header"><span class="theme-flag">🇨🇳</span><span class="theme-name" data-en="High Dividend" data-zh="高股息红利"></span></div>
+      <div class="theme-name-sub">a-high-dividend</div>
+      <div class="sector-chips"><span class="sector-chip">Banks</span><span class="sector-chip">Utilities</span><span class="sector-chip">Energy</span></div>
+      <div class="filter-badges"><span class="filter-badge cn-badge">MCap &gt; ¥50B</span><span class="filter-badge cn-badge">Div Yield &gt; 3%</span><span class="filter-badge cn-badge">Op Margin &gt; 10%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; ¥50B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Finance, Utilities, Energy Minerals</span></div>
+        <div class="filter-row"><span>dividend_yield</span><span class="filter-value">&gt; 3%</span></div>
+        <div class="filter-row"><span>operating_margin_ttm</span><span class="filter-value">&gt; 10%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">08:00 Fri</span></div>
+      </div></div>
+    </div>
+
+    <div class="card theme-card cn card-lift">
+      <div class="theme-header"><span class="theme-flag">🇨🇳</span><span class="theme-name" data-en="Semiconductor" data-zh="半导体国产替代"></span></div>
+      <div class="theme-name-sub">a-semiconductor</div>
+      <div class="sector-chips"><span class="sector-chip">Semiconductors</span><span class="sector-chip">Chip Design</span><span class="sector-chip">Foundry</span></div>
+      <div class="filter-badges"><span class="filter-badge cn-badge">MCap &gt; ¥10B</span><span class="filter-badge cn-badge">Rev Growth &gt; 10%</span></div>
+      <div class="theme-details"><div class="theme-details-inner">
+        <div class="filter-row"><span>market_cap_basic</span><span class="filter-value">&gt; ¥10B</span></div>
+        <div class="filter-row"><span>sector</span><span class="filter-value">Electronic Technology</span></div>
+        <div class="filter-row"><span>revenue_yoy_growth</span><span class="filter-value">&gt; 10%</span></div>
+        <div class="filter-row"><span>schedule</span><span class="filter-value">07:30 Mon-Fri</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Tab 6: Tech & Quality ==================== -->
+<section class="tab-content" id="tab-quality">
+  <h2 class="section-title" data-en="Testing & Quality" data-zh="测试与质量"></h2>
+
+  <div class="quality-grid">
+    <div>
+      <div class="test-badges">
+        <div class="test-badge">
+          <span class="test-badge-num">71</span>
+          <div><div class="test-badge-label" data-en="Unit Tests" data-zh="单元测试"></div><div style="font-family:'JetBrains Mono';font-size:0.65rem;color:var(--text-3);">Vitest v4</div></div>
+        </div>
+        <div class="test-badge">
+          <span class="test-badge-num">54+</span>
+          <div><div class="test-badge-label" data-en="E2E Tests" data-zh="端到端测试"></div><div style="font-family:'JetBrains Mono';font-size:0.65rem;color:var(--text-3);">Playwright</div></div>
+        </div>
+      </div>
+
+      <h3 style="font-family:Inter,sans-serif;font-weight:700;font-size:1.1rem;font-weight:400;color:var(--fg-strong);margin:24px 0 14px;" data-en="Coverage" data-zh="覆盖率"></h3>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>signal-scorer.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill copper" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>sentiment.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill sage" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>reddit-sentiment.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill sage" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>xueqiu-sentiment.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill sage" style="width:100%;"></div></div>
+      </div>
+
+      <div style="margin-top:28px;">
+        <h3 style="font-family:Inter,sans-serif;font-weight:700;font-size:1.1rem;font-weight:400;color:var(--accent);margin-bottom:14px;" data-en="Testing Pyramid" data-zh="测试金字塔"></h3>
+        <svg viewBox="0 0 360 160" style="max-width:340px;">
+          <polygon points="180,10 320,150 40,150" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+          <line x1="100" y1="100" x2="260" y2="100" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+          <text x="180" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#7ab87a">Unit Tests (71)</text>
+          <text x="180" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7aa8d4">E2E (54+)</text>
+          <text x="180" y="45" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#9a8abf">Manual</text>
+        </svg>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="font-family:Inter,sans-serif;font-weight:700;font-size:1.1rem;font-weight:400;color:var(--accent);margin-bottom:14px;" data-en="Coverage Configuration" data-zh="覆盖率配置"></h3>
+      <div class="card" style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;color:var(--text-2);line-height:2;">
+        <div style="color:var(--text-3);margin-bottom:8px;font-size:0.68rem;">vitest.config.ts</div>
+        <div>provider: <span style="color:var(--accent);">"v8"</span></div>
+        <div>include:</div>
+        <div style="padding-left:16px;color:var(--green);">lib/signal-scorer.ts</div>
+        <div style="padding-left:16px;color:var(--green);">lib/reddit-sentiment.ts</div>
+        <div style="padding-left:16px;color:var(--green);">lib/xueqiu-sentiment.ts</div>
+        <div style="padding-left:16px;color:var(--green);">lib/sentiment.ts</div>
+        <div style="margin-top:8px;">exclude:</div>
+        <div style="padding-left:16px;color:var(--red);">e2e/**</div>
+        <div style="padding-left:16px;color:var(--red);">node_modules/**</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Database -->
+  <h2 class="section-title" data-en="Database Schema" data-zh="数据库架构"></h2>
+  <div class="db-grid">
+    <div class="card db-table-card">
+      <div class="db-table-name">themes</div>
+      <div class="db-col"><span class="db-col-key">id</span><span class="db-col-type">text PK</span></div>
+      <div class="db-col"><span>name_zh</span><span class="db-col-type">text</span></div>
+      <div class="db-col"><span>name_en</span><span class="db-col-type">text</span></div>
+      <div class="db-col"><span>market</span><span class="db-col-type">text</span></div>
+      <div class="db-col"><span>sectors</span><span class="db-col-type">json</span></div>
+      <div class="db-col"><span>filters</span><span class="db-col-type">json</span></div>
+      <div class="db-col"><span>schedule</span><span class="db-col-type">text?</span></div>
+    </div>
+    <div class="card db-table-card">
+      <div class="db-table-name">screen_runs</div>
+      <div class="db-col"><span class="db-col-key">id</span><span class="db-col-type">int PK auto</span></div>
+      <div class="db-col"><span>theme_id</span><span class="db-col-type">text FK</span></div>
+      <div class="db-col"><span>source</span><span class="db-col-type">enum</span></div>
+      <div class="db-col"><span>run_at</span><span class="db-col-type">datetime</span></div>
+      <div class="db-col"><span>candidate_count</span><span class="db-col-type">int?</span></div>
+    </div>
+    <div class="card db-table-card">
+      <div class="db-table-name">stock_snapshots</div>
+      <div class="db-col"><span class="db-col-key">id</span><span class="db-col-type">int PK auto</span></div>
+      <div class="db-col"><span>run_id</span><span class="db-col-type">int FK</span></div>
+      <div class="db-col"><span>ticker</span><span class="db-col-type">text</span></div>
+      <div class="db-col"><span>company</span><span class="db-col-type">text</span></div>
+      <div class="db-col"><span>close, pe, rsi...</span><span class="db-col-type">real</span></div>
+      <div class="db-col"><span>sig_* (8 dims)</span><span class="db-col-type">int</span></div>
+      <div class="db-col"><span>signal_total</span><span class="db-col-type">int</span></div>
+      <div class="db-col"><span>rating</span><span class="db-col-type">text</span></div>
+      <div class="db-col"><span>thesis_zh</span><span class="db-col-type">text?</span></div>
+      <div class="db-col" style="color:var(--text-3);font-size:0.62rem;margin-top:4px;"><span>unique: (run_id, ticker)</span></div>
+    </div>
+    <div class="card db-table-card">
+      <div class="db-table-name">watchlist</div>
+      <div class="db-col"><span class="db-col-key">ticker</span><span class="db-col-type">text PK</span></div>
+      <div class="db-col"><span>added_at</span><span class="db-col-type">datetime</span></div>
+      <div class="db-col"><span>notes_zh</span><span class="db-col-type">text?</span></div>
+      <div class="db-col"><span>cost_basis</span><span class="db-col-type">real?</span></div>
+      <div class="db-col"><span>shares</span><span class="db-col-type">real?</span></div>
+    </div>
+    <div class="card db-table-card">
+      <div class="db-table-name">decisions</div>
+      <div class="db-col"><span class="db-col-key">id</span><span class="db-col-type">int PK auto</span></div>
+      <div class="db-col"><span>ticker</span><span class="db-col-type">text</span></div>
+      <div class="db-col"><span>action</span><span class="db-col-type">BUY/SELL/HOLD</span></div>
+      <div class="db-col"><span>signal_total</span><span class="db-col-type">int</span></div>
+      <div class="db-col"><span>price_at_decision</span><span class="db-col-type">real?</span></div>
+      <div class="db-col"><span>entry, target, stop</span><span class="db-col-type">text?</span></div>
+      <div class="db-col"><span>thesis_zh</span><span class="db-col-type">text?</span></div>
+      <div class="db-col"><span>decided_at</span><span class="db-col-type">datetime</span></div>
+    </div>
+  </div>
+
+  <!-- Deployment -->
+  <h2 class="section-title" data-en="Deployment" data-zh="部署架构"></h2>
+  <div class="deploy-flow">
+    <div class="deploy-node"><div class="deploy-node-icon">🌐</div><div class="deploy-node-name">Vercel</div><div class="deploy-node-detail">iad1 (Washington DC)</div></div>
+    <div class="deploy-arrow">→</div>
+    <div class="deploy-node"><div class="deploy-node-icon">🗄</div><div class="deploy-node-name">Turso</div><div class="deploy-node-detail">aws-us-east-1</div></div>
+    <div class="deploy-arrow">→</div>
+    <div class="deploy-node"><div class="deploy-node-icon">⏰</div><div class="deploy-node-name" data-en="Cron Jobs" data-zh="定时任务"></div><div class="deploy-node-detail">5 scheduled</div></div>
+    <div class="deploy-arrow">→</div>
+    <div class="deploy-node"><div class="deploy-node-icon">🔒</div><div class="deploy-node-name" data-en="Auth Proxy" data-zh="认证代理"></div><div class="deploy-node-detail">Bearer token</div></div>
+  </div>
+
+  <!-- Environment -->
+  <h2 class="section-title" data-en="Environment" data-zh="运行环境"></h2>
+  <div class="env-badges">
+    <div class="env-badge"><span class="env-badge-dot" style="background:var(--green);"></span>Node.js v25.1.0</div>
+    <div class="env-badge"><span class="env-badge-dot" style="background:var(--blue);"></span>TypeScript v5 (strict)</div>
+    <div class="env-badge"><span class="env-badge-dot" style="background:var(--accent);"></span>Python 3.13 (uv)</div>
+    <div class="env-badge"><span class="env-badge-dot" style="background:var(--purple);"></span>macOS Darwin 25.3.0</div>
+    <div class="env-badge"><span class="env-badge-dot" style="background:var(--teal);"></span>Port 8888</div>
+    <div class="env-badge"><span class="env-badge-dot" style="background:var(--green);"></span>Next.js 16.1.6</div>
+    <div class="env-badge"><span class="env-badge-dot" style="background:var(--blue);"></span>React 19.2.3</div>
+    <div class="env-badge"><span class="env-badge-dot" style="background:var(--accent);"></span>Drizzle ORM 0.45.1</div>
+  </div>
+
+  <!-- Scripts -->
+  <h2 class="section-title" style="margin-top:40px;" data-en="Scripts" data-zh="脚本命令"></h2>
+  <div class="script-grid">
+    <div class="script-item"><span class="script-cmd">npm run dev</span><span class="script-desc" data-en="Dev server :8888" data-zh="开发服务器 :8888"></span></div>
+    <div class="script-item"><span class="script-cmd">npm run build</span><span class="script-desc" data-en="Production build" data-zh="生产构建"></span></div>
+    <div class="script-item"><span class="script-cmd">npm run test</span><span class="script-desc" data-en="Vitest (125 tests)" data-zh="Vitest (125 测试)"></span></div>
+    <div class="script-item"><span class="script-cmd">npm run db:push</span><span class="script-desc" data-en="Apply schema" data-zh="应用架构"></span></div>
+    <div class="script-item"><span class="script-cmd">npm run db:seed</span><span class="script-desc" data-en="Seed themes" data-zh="初始化主题"></span></div>
+    <div class="script-item"><span class="script-cmd">npm run cron:local</span><span class="script-desc" data-en="Local cron" data-zh="本地定时任务"></span></div>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:32px;border-top:1px solid var(--border);color:var(--text-3);font-size:0.72rem;font-family:'JetBrains Mono',monospace;">
+  <span data-en="invest-app codebase visualization" data-zh="invest-app 代码库可视化"></span>
+  <span style="margin:0 8px;opacity:0.3;">·</span>
+  <span style="color:var(--accent);">invest.beluga-tempo.com</span>
+</footer>
+
+<script>
+// Tab system
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Bilingual
+let currentLang = localStorage.getItem('investVizLang') || 'en';
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('investVizLang', lang);
+  document.documentElement.setAttribute('data-lang', lang);
+  document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+    el.textContent = lang === 'zh' ? el.getAttribute('data-zh') : el.getAttribute('data-en');
+  });
+  document.getElementById('langToggle').textContent = lang === 'en' ? 'EN / 中' : '中 / EN';
+}
+function toggleLang() { setLang(currentLang === 'en' ? 'zh' : 'en'); }
+setLang(currentLang);
+
+// Pipeline details
+let activePanel = null;
+function showDetail(id) {
+  const panel = document.getElementById('detail-' + id);
+  if (!panel) return;
+  document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('visible'));
+  if (activePanel === id) { activePanel = null; return; }
+  panel.classList.add('visible');
+  activePanel = id;
+  setLang(currentLang);
+}
+
+// Animate coverage bars on view
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.coverage-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.width = w; }));
+      });
+      obs.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+const qt = document.getElementById('tab-quality');
+if (qt) obs.observe(qt);
+</script>
+<script>
+// Generate starfield — individual stars with independent twinkle
+(function() {
+  const sf = document.getElementById('starfield');
+  if (!sf) return;
+  // 40 bright gold stars (2px, #FFD43B)
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('span');
+    el.style.cssText = 'left:'+((Math.random()*100).toFixed(1))+'%;top:'+((Math.random()*100).toFixed(1))+'%;width:2px;height:2px;background:#FFD43B;animation-duration:'+(2+Math.random()*5).toFixed(1)+'s;animation-delay:'+(Math.random()*5).toFixed(1)+'s';
+    sf.appendChild(el);
+  }
+  // 60 dim white stars (1px)
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('span');
+    el.style.cssText = 'left:'+((Math.random()*100).toFixed(1))+'%;top:'+((Math.random()*100).toFixed(1))+'%;width:1px;height:1px;background:rgba(255,255,255,0.5);animation-duration:'+(2+Math.random()*5).toFixed(1)+'s;animation-delay:'+(Math.random()*5).toFixed(1)+'s';
+    sf.appendChild(el);
+  }
+})();
+</script>
+</body>
+</html>
