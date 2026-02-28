@@ -70,10 +70,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Screen error:", error);
     return NextResponse.json(
-      {
-        error: "Screen failed",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Screen failed" },
       { status: 500 },
     );
   }

@@ -10,6 +10,9 @@ import { persistScreenResults } from "@/lib/db-operations";
 export async function GET(request: NextRequest) {
   // Verify cron secret (Vercel sends this automatically)
   const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret && process.env.VERCEL) {
+    return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
+  }
   if (cronSecret) {
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${cronSecret}`) {
@@ -73,10 +76,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error(`[CRON] Screen failed for ${themeId}:`, error);
     return NextResponse.json(
-      {
-        error: "Cron screen failed",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Cron screen failed" },
       { status: 500 },
     );
   }

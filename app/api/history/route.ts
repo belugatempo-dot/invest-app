@@ -5,6 +5,8 @@ import { eq, desc } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
+const TICKER_RE = /^[A-Z0-9.\-]{1,10}$/;
+
 export async function GET(request: NextRequest) {
   const action = request.nextUrl.searchParams.get("action");
 
@@ -31,6 +33,9 @@ export async function GET(request: NextRequest) {
       const ticker = request.nextUrl.searchParams.get("ticker");
       if (!ticker) {
         return NextResponse.json({ error: "Missing ticker" }, { status: 400 });
+      }
+      if (!TICKER_RE.test(ticker.toUpperCase())) {
+        return NextResponse.json({ error: "Invalid ticker" }, { status: 400 });
       }
       const snapshots = await db
         .select({

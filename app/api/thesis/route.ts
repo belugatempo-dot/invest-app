@@ -73,10 +73,7 @@ ${context}
     }
     console.error("Thesis error for", ticker ?? "unknown", error);
     return NextResponse.json(
-      {
-        error: "Thesis generation failed",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Thesis generation failed" },
       { status: 500 },
     );
   }

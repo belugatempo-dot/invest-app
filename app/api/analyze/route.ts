@@ -23,10 +23,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Analyze error:", error);
     return NextResponse.json(
-      {
-        error: "Analysis failed",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Analysis failed" },
       { status: 500 },
     );
   }

@@ -8,6 +8,8 @@ export async function GET() {
   return NextResponse.json({ tickers: rows.map((r) => r.ticker) });
 }
 
+const TICKER_RE = /^[A-Z0-9.\-]{1,10}$/;
+
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const ticker = body.ticker?.trim()?.toUpperCase();
@@ -15,6 +17,13 @@ export async function POST(request: NextRequest) {
   if (!ticker) {
     return NextResponse.json(
       { error: "Missing ticker" },
+      { status: 400 },
+    );
+  }
+
+  if (!TICKER_RE.test(ticker)) {
+    return NextResponse.json(
+      { error: "Invalid ticker" },
       { status: 400 },
     );
   }
@@ -33,6 +42,13 @@ export async function DELETE(request: NextRequest) {
   if (!ticker) {
     return NextResponse.json(
       { error: "Missing ?ticker= parameter" },
+      { status: 400 },
+    );
+  }
+
+  if (!TICKER_RE.test(ticker)) {
+    return NextResponse.json(
+      { error: "Invalid ticker" },
       { status: 400 },
     );
   }

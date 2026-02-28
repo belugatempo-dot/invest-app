@@ -105,10 +105,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Push error:", error);
     return NextResponse.json(
-      {
-        error: "Push failed",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Push failed" },
       { status: 500 },
     );
   }
