@@ -4,30 +4,22 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const encoder = new TextEncoder();
+  let keepaliveTimer: ReturnType<typeof setInterval>;
+  let unsubscribeFn: (() => void) | undefined;
 
   const stream = new ReadableStream({
     start(controller) {
-      // Send keepalive every 30s
-      const keepalive = setInterval(() => {
+      keepaliveTimer = setInterval(() => {
         controller.enqueue(encoder.encode(": keepalive\n\n"));
       }, 30_000);
 
-      const unsubscribe = sse.subscribe((data: string) => {
+      unsubscribeFn = sse.subscribe((data: string) => {
         controller.enqueue(encoder.encode(data));
       });
-
-      // Clean up on cancel
-      const cleanup = () => {
-        clearInterval(keepalive);
-        unsubscribe();
-      };
-
-      // Handle stream closing
-      const originalCancel = stream.cancel?.bind(stream);
-      stream.cancel = async (reason) => {
-        cleanup();
-        if (originalCancel) await originalCancel(reason);
-      };
+    },
+    cancel() {
+      clearInterval(keepaliveTimer);
+      unsubscribeFn?.();
     },
   });
 

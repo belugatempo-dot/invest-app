@@ -13,7 +13,7 @@ npm run dev              # Next.js dev server on port 8888
 npm run build            # Production build
 npm run start            # Production server on port 8888
 npm run cron:local       # Local cron scheduler (run alongside dev server)
-npm run test             # Vitest unit tests (133 tests)
+npm run test             # Vitest unit tests (175 tests)
 npm run test -- --coverage  # With v8 coverage
 npm run test:e2e         # Playwright E2E tests (35 tests)
 npm run test:e2e:ui      # Playwright interactive UI mode
@@ -92,7 +92,7 @@ See `.env.example`. All optional except `DATABASE_URL` + `DATABASE_AUTH_TOKEN` f
 
 ### Unit Tests (Vitest)
 - **Framework:** Vitest v4 with globals enabled.
-- **133 tests** across 8 test files.
+- **175 tests** across 15 test files.
 - **Coverage target:** 100% on `lib/signal-scorer.ts` (business logic). Enforced in `vitest.config.ts`.
 - **Test file convention:** `*.test.ts` co-located with source.
 - Signal scorer tests cover all 8 scoring functions, rating derivation, level calculations, edge cases.
@@ -132,8 +132,14 @@ See `.env.example`. All optional except `DATABASE_URL` + `DATABASE_AUTH_TOKEN` f
 | `vercel.json` | Vercel Cron job definitions |
 | `scripts/cron-local.ts` | Local cron scheduler |
 | `app/api/screen/` | Run themed screen → score → persist |
+| `app/api/analyze/` | Score raw stock data via POST |
 | `app/api/cron/` | Cron endpoint (called by Vercel Cron or local script) |
 | `app/api/thesis/` | Generate AI investment thesis via LLM |
+| `app/api/push/` | CLI push scored stocks into DB |
+| `app/api/watchlist/` | Watchlist CRUD (GET/POST/DELETE) |
+| `app/api/history/` | Historical runs, evolution, decisions, accuracy |
+| `app/api/events/` | SSE event stream for dashboard updates |
+| `app/api/*/route.test.ts` | Unit tests for all 7 API routes (42 tests) |
 | `app/globals.css` | Starry Blue theme tokens |
 | `playwright.config.ts` | Playwright E2E config (Chromium, single worker, test.db) |
 | `e2e/global-setup.ts` | E2E setup: schema push + theme seeding into test.db |
