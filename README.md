@@ -21,7 +21,7 @@
 | 定时任务 | Vercel Cron（生产）/ 本地脚本（开发）|
 | 数据源 | TradingView scan API（直接 HTTP，无需认证）|
 | AI 研报 | Vercel AI SDK（Anthropic、OpenAI、DeepSeek），本地开发自动 fallback 到 `claude -p` CLI |
-| 测试 | Vitest v4（124 个单元测试）+ Playwright（37 个 E2E 测试）|
+| 测试 | Vitest v4（175 个单元测试）+ Playwright（37 个 E2E 测试）|
 
 ### 页面
 
@@ -99,7 +99,7 @@ npm run build && npm run start
 
 ```bash
 # 单元测试
-npm run test                # 运行全部 124 个单元测试
+npm run test                # 运行全部 175 个单元测试
 npm run test -- --coverage  # 带覆盖率报告
 
 # E2E 测试（Playwright）
@@ -108,7 +108,7 @@ npm run test:e2e:ui         # Playwright 交互式 UI 模式
 npm run test:e2e:smoke      # 2 个冒烟测试（需联网，调用真实 TradingView API）
 ```
 
-124 个单元测试覆盖 `lib/signal-scorer.ts`（100% 覆盖率）、`lib/llm.ts`、`lib/reddit-sentiment.ts`、`lib/sentiment.ts`、`lib/xueqiu-sentiment.ts`、`lib/db-operations.ts` 和 `proxy.ts`。
+175 个单元测试覆盖 `lib/signal-scorer.ts`（100% 覆盖率）、`lib/llm.ts`、`lib/reddit-sentiment.ts`、`lib/sentiment.ts`、`lib/xueqiu-sentiment.ts`、`lib/db-operations.ts`、`proxy.ts` 和全部 7 个 API 路由（`app/api/*/route.ts`）。
 
 37 个 E2E 测试覆盖全部 7 个 API 路由（错误路径、CRUD、评分流水线）和 5 个页面（导航、筛选、面板、历史、个股详情），使用隔离的 `data/test.db`。
 
@@ -196,6 +196,7 @@ invest-app/
 │   ├── use-watchlist.ts        # 自选股 React Hook
 │   ├── seed.ts                 # 数据库种子脚本
 │   └── utils.ts                # Tailwind cn() 工具函数
+├── app/api/*/route.test.ts     # 全部 7 个 API 路由单元测试（42 个测试）
 ├── e2e/                        # Playwright E2E 测试
 │   ├── global-setup.ts         # 创建 test.db、推送 schema、种子数据
 │   ├── global-teardown.ts      # 删除 test.db
@@ -299,7 +300,7 @@ A bilingual (Chinese/English) investment analysis platform that screens US and A
 | Scheduling | Vercel Cron (production), local script (dev) |
 | Data Source | TradingView scan API (direct HTTP, no auth) |
 | AI Thesis | Vercel AI SDK (Anthropic, OpenAI, DeepSeek); falls back to `claude -p` CLI for local dev |
-| Testing | Vitest v4 (124 unit tests) + Playwright (37 E2E tests) |
+| Testing | Vitest v4 (175 unit tests) + Playwright (37 E2E tests) |
 
 ### Views
 
@@ -377,7 +378,7 @@ The app runs at **http://localhost:8888**.
 
 ```bash
 # Unit tests
-npm run test                # Run all 124 unit tests
+npm run test                # Run all 175 unit tests
 npm run test -- --coverage  # With coverage report
 
 # E2E tests (Playwright)
@@ -386,7 +387,7 @@ npm run test:e2e:ui         # Playwright interactive UI mode
 npm run test:e2e:smoke      # 2 smoke tests (requires internet, hits real TradingView API)
 ```
 
-124 unit tests covering `lib/signal-scorer.ts` (100% coverage), `lib/llm.ts`, `lib/reddit-sentiment.ts`, `lib/sentiment.ts`, `lib/xueqiu-sentiment.ts`, `lib/db-operations.ts`, and `proxy.ts`.
+175 unit tests covering `lib/signal-scorer.ts` (100% coverage), `lib/llm.ts`, `lib/reddit-sentiment.ts`, `lib/sentiment.ts`, `lib/xueqiu-sentiment.ts`, `lib/db-operations.ts`, `proxy.ts`, and all 7 API routes (`app/api/*/route.ts`).
 
 37 E2E tests covering all 7 API routes (error paths, CRUD, scoring pipeline) and 5 pages (navigation, screens, dashboard, history, stock detail), using an isolated `data/test.db`.
 
@@ -474,6 +475,7 @@ invest-app/
 │   ├── use-watchlist.ts        # Watchlist React hook
 │   ├── seed.ts                 # DB seed script
 │   └── utils.ts                # Tailwind cn() helper
+├── app/api/*/route.test.ts     # Unit tests for all 7 API routes (42 tests)
 ├── e2e/                        # Playwright E2E tests
 │   ├── global-setup.ts         # Create test.db, push schema, seed data
 │   ├── global-teardown.ts      # Delete test.db

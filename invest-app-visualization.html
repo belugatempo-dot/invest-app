@@ -280,6 +280,20 @@ h1, h2, h3, .heading {
   margin: 0 auto;
   line-height: 1.7;
 }
+.hero .cta-link {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 10px 28px;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: background 0.2s, transform 0.15s;
+}
+.hero .cta-link:hover { background: #f0c254; transform: translateY(-1px); }
 
 /* Stats — compact inline pills */
 .stats-grid {
@@ -1117,6 +1131,7 @@ h1, h2, h3, .heading {
       <span data-en="Live at" data-zh="在线访问"></span>
       <span style="color:var(--accent);font-family:'JetBrains Mono',monospace;">invest.beluga-tempo.com</span>
     </p>
+    <a class="cta-link" href="https://invest.beluga-tempo.com/screens" target="_blank" rel="noopener" data-en="Try It Out →" data-zh="立即体验 →"></a>
     <!-- Stats pills inline in hero -->
     <div class="stats-grid">
       <div class="stat-card">
@@ -1128,7 +1143,7 @@ h1, h2, h3, .heading {
         <div class="stat-label" data-en="Signal Dimensions" data-zh="信号维度"></div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">125+</div>
+        <div class="stat-number">210+</div>
         <div class="stat-label" data-en="Tests" data-zh="测试用例"></div>
       </div>
       <div class="stat-card">
@@ -1913,11 +1928,11 @@ h1, h2, h3, .heading {
     <div>
       <div class="test-badges">
         <div class="test-badge">
-          <span class="test-badge-num">71</span>
+          <span class="test-badge-num">175</span>
           <div><div class="test-badge-label" data-en="Unit Tests" data-zh="单元测试"></div><div style="font-family:'JetBrains Mono';font-size:0.65rem;color:var(--text-3);">Vitest v4</div></div>
         </div>
         <div class="test-badge">
-          <span class="test-badge-num">54+</span>
+          <span class="test-badge-num">37</span>
           <div><div class="test-badge-label" data-en="E2E Tests" data-zh="端到端测试"></div><div style="font-family:'JetBrains Mono';font-size:0.65rem;color:var(--text-3);">Playwright</div></div>
         </div>
       </div>
@@ -1939,14 +1954,46 @@ h1, h2, h3, .heading {
         <div class="coverage-label"><span>xueqiu-sentiment.ts</span><span>100%</span></div>
         <div class="coverage-track"><div class="coverage-fill sage" style="width:100%;"></div></div>
       </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>api/screen/route.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill copper" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>api/analyze/route.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill copper" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>api/watchlist/route.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill copper" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>api/history/route.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill copper" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>api/thesis/route.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill copper" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>api/cron/route.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill copper" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>api/push/route.ts</span><span>100%</span></div>
+        <div class="coverage-track"><div class="coverage-fill copper" style="width:100%;"></div></div>
+      </div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-label"><span>api/events/route.ts</span><span>70%</span></div>
+        <div class="coverage-track"><div class="coverage-fill sage" style="width:70%;"></div></div>
+      </div>
 
       <div style="margin-top:28px;">
         <h3 style="font-family:Inter,sans-serif;font-weight:700;font-size:1.1rem;font-weight:400;color:var(--accent);margin-bottom:14px;" data-en="Testing Pyramid" data-zh="测试金字塔"></h3>
         <svg viewBox="0 0 360 160" style="max-width:340px;">
           <polygon points="180,10 320,150 40,150" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
           <line x1="100" y1="100" x2="260" y2="100" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-          <text x="180" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#7ab87a">Unit Tests (71)</text>
-          <text x="180" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7aa8d4">E2E (54+)</text>
+          <text x="180" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#7ab87a">Unit Tests (175)</text>
+          <text x="180" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7aa8d4">E2E (37)</text>
           <text x="180" y="45" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#9a8abf">Manual</text>
         </svg>
       </div>
@@ -1962,6 +2009,7 @@ h1, h2, h3, .heading {
         <div style="padding-left:16px;color:var(--green);">lib/reddit-sentiment.ts</div>
         <div style="padding-left:16px;color:var(--green);">lib/xueqiu-sentiment.ts</div>
         <div style="padding-left:16px;color:var(--green);">lib/sentiment.ts</div>
+        <div style="padding-left:16px;color:var(--green);">app/api/*/route.ts (7 routes)</div>
         <div style="margin-top:8px;">exclude:</div>
         <div style="padding-left:16px;color:var(--red);">e2e/**</div>
         <div style="padding-left:16px;color:var(--red);">node_modules/**</div>
@@ -2054,7 +2102,7 @@ h1, h2, h3, .heading {
   <div class="script-grid">
     <div class="script-item"><span class="script-cmd">npm run dev</span><span class="script-desc" data-en="Dev server :8888" data-zh="开发服务器 :8888"></span></div>
     <div class="script-item"><span class="script-cmd">npm run build</span><span class="script-desc" data-en="Production build" data-zh="生产构建"></span></div>
-    <div class="script-item"><span class="script-cmd">npm run test</span><span class="script-desc" data-en="Vitest (125 tests)" data-zh="Vitest (125 测试)"></span></div>
+    <div class="script-item"><span class="script-cmd">npm run test</span><span class="script-desc" data-en="Vitest (175 tests)" data-zh="Vitest (175 测试)"></span></div>
     <div class="script-item"><span class="script-cmd">npm run db:push</span><span class="script-desc" data-en="Apply schema" data-zh="应用架构"></span></div>
     <div class="script-item"><span class="script-cmd">npm run db:seed</span><span class="script-desc" data-en="Seed themes" data-zh="初始化主题"></span></div>
     <div class="script-item"><span class="script-cmd">npm run cron:local</span><span class="script-desc" data-en="Local cron" data-zh="本地定时任务"></span></div>
