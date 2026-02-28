@@ -12,6 +12,7 @@ export default defineConfig({
         "lib/reddit-sentiment.ts",
         "lib/xueqiu-sentiment.ts",
         "lib/sentiment.ts",
+        "app/api/screen/route.ts",
       ],
     },
   },
