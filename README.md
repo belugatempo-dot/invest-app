@@ -1,12 +1,14 @@
 # invest-app — 投资信号仪表盘 | Investment Signal Dashboard
 
+**线上地址 / Live:** https://invest.beluga-tempo.com
+
 [中文](#中文) | [English](#english)
 
 ---
 
 ## 中文
 
-一个中英双语投资分析平台，通过 TradingView 筛选美股，基于 8 维信号矩阵打分，输出可执行的 买入/持有/卖出 决策，以暗色主题交互式仪表盘呈现。
+一个中英双语投资分析平台，通过 TradingView 筛选美股和 A 股，基于 8 维信号矩阵打分，输出可执行的 买入/持有/卖出 决策，以暗色主题交互式仪表盘呈现。
 
 ### 技术栈
 
@@ -19,14 +21,15 @@
 | 定时任务 | Vercel Cron（生产）/ 本地脚本（开发）|
 | 数据源 | TradingView scan API（直接 HTTP，无需认证）|
 | AI 研报 | Vercel AI SDK（Anthropic、OpenAI、DeepSeek），本地开发自动 fallback 到 `claude -p` CLI |
-| 测试 | Vitest v4, v8 coverage（92 个测试）|
+| 测试 | Vitest v4, v8 coverage（125 个测试）|
 
 ### 页面
 
 | 路由 | 名称 | 描述 |
 |------|------|------|
 | `/` | 决策面板 | 信号矩阵热力图，可排序股票卡片，点击进入详情 |
-| `/screens` | 主题筛选 | 5 个投资主题卡片，一键筛选 |
+| `/screens` | 主题筛选 | 10 个投资主题卡片（5 美股 + 5 A 股），一键筛选 |
+| `/dashboard` | 仪表盘 | 信号矩阵概览（替代视图）|
 | `/stock/[ticker]` | 个股深研 | 价格图表、信号拆解、AI 研报、决策记录 |
 | `/history` | 历史追踪 | 筛选运行时间线、信号演变、决策日志 |
 
@@ -43,7 +46,7 @@
 | 动量 | RSI 35–55（逢低买入区）| RSI 40–60 | RSI > 70 且接近 52 周高点 |
 | 形态 | ADX > 25，距 52 周高点 10% 内 | ADX 15–25 | ADX < 15 |
 | 催化剂 | 财报 < 30 天 | > 60 天 | 二元事件风险 |
-| 情绪 | Reddit 提及排名高且上升 | 适度提及 | 提及低或下降 |
+| 情绪 | Reddit（美股）/ 雪球（A 股）提及排名高且上升 | 适度提及 | 提及低或下降 |
 
 **评级：** +6 至 +8 = 强烈买入，+4 至 +5 = 买入，+1 至 +3 = 倾向买入，-1 至 0 = 持有，-2 至 -3 = 卖出，-4 至 -8 = 强烈卖出
 
@@ -56,6 +59,11 @@
 | 能源转型 | 太阳能、可再生能源、电气设备 | 营收增长 > 5%，FCF 利润率 > 0%，市值 > $1B |
 | 医疗 AI | 医疗科技、健康 IT、诊断 | 研发 > 10%，营收增长 > 10% |
 | 国防与回流 | 航空航天、特种化工 | 营收增长 > 5% |
+| **A 股 AI 算力** | 半导体、云计算、数据中心 | 营收增长 > 15%，毛利率 > 25%，市值 > ¥200 亿 |
+| **新能源车产业链** | 电动车、电池、汽车零部件 | 营收增长 > 10%，市值 > ¥100 亿 |
+| **消费白马** | 消费必需品、耐用消费品、饮料 | 毛利率 > 30%，ROE > 15%，市值 > ¥500 亿 |
+| **高股息红利** | 银行、公用事业、能源 | 股息率 > 3%，营业利润率 > 10%，市值 > ¥500 亿 |
+| **半导体国产替代** | 半导体、芯片设计、代工 | 营收增长 > 10%，市值 > ¥100 亿 |
 
 ### 快速开始
 
@@ -69,7 +77,7 @@
 ```bash
 npm install
 npm run db:push    # 创建数据库表结构
-npm run db:seed    # 插入 5 个主题预设
+npm run db:seed    # 插入 10 个主题预设（5 美股 + 5 A 股）
 ```
 
 #### 运行
@@ -90,11 +98,11 @@ npm run build && npm run start
 #### 测试
 
 ```bash
-npm run test                # 运行全部 92 个测试
+npm run test                # 运行全部 125 个测试
 npm run test -- --coverage  # 带覆盖率报告
 ```
 
-92 个测试覆盖 `lib/signal-scorer.ts`（100% 覆盖率）、`lib/llm.ts` 和 `lib/reddit-sentiment.ts`。
+125 个测试覆盖 `lib/signal-scorer.ts`（100% 覆盖率）、`lib/llm.ts`、`lib/reddit-sentiment.ts`、`lib/sentiment.ts`、`lib/xueqiu-sentiment.ts`、`lib/db-operations.ts` 和 `proxy.ts`。
 
 ### 环境变量
 
@@ -130,6 +138,8 @@ invest-app/
 ├── app/                        # Next.js App Router
 │   ├── layout.tsx              # 根布局（Starry Blue 主题、字体）
 │   ├── page.tsx                # 决策面板（信号矩阵概览）
+│   ├── dashboard/              # 仪表盘（替代视图）
+│   ├── dashboard-client.tsx    # 仪表盘客户端组件
 │   ├── screens/                # 主题筛选 UI
 │   ├── stock/[ticker]/         # 个股详情
 │   ├── history/                # 历史记录与决策日志
@@ -150,19 +160,29 @@ invest-app/
 │   ├── price-chart.tsx         # lightweight-charts K 线图
 │   ├── thesis-panel.tsx        # AI 研报展示
 │   ├── decision-journal.tsx    # 买入/卖出/持有记录
+│   ├── rating-tooltip.tsx      # 评级提示气泡
+│   ├── signal-history.tsx      # 信号历史趋势
+│   ├── star-button.tsx         # 自选股收藏按钮
+│   ├── theme-card.tsx          # 主题预设卡片
+│   ├── watchlist-section.tsx   # 自选股管理区域
 │   └── ui/                     # shadcn/ui 基础组件
 ├── lib/
 │   ├── signal-scorer.ts        # 8 维打分（纯函数）
 │   ├── signal-scorer.test.ts   # 71 个测试，100% 覆盖率
 │   ├── screener.ts             # TradingView scan API 客户端
-│   ├── themes.ts               # 5 个主题预设及筛选条件
+│   ├── themes.ts               # 10 个主题预设（5 美股 + 5 A 股）
 │   ├── schema.ts               # Drizzle ORM 数据表（5 张表）
 │   ├── db.ts                   # libSQL/Turso 连接（自动识别本地/云端）
 │   ├── db-operations.ts        # 筛选结果持久化逻辑
 │   ├── llm.ts                  # LLM 抽象层 — 通过 AI SDK 支持多提供商
 │   ├── llm.test.ts             # LLM 单元测试
+│   ├── sentiment.ts            # 市场感知情绪路由（美股→Reddit，A股→雪球）
+│   ├── sentiment.test.ts       # 情绪路由测试
 │   ├── reddit-sentiment.ts     # Reddit 情绪打分
-│   ├── reddit-sentiment.test.ts # 情绪测试
+│   ├── reddit-sentiment.test.ts # Reddit 情绪测试
+│   ├── xueqiu-sentiment.ts    # 雪球情绪打分（A 股）
+│   ├── xueqiu-sentiment.test.ts # 雪球情绪测试
+│   ├── db-operations.test.ts   # DB 操作测试
 │   ├── sse.ts                  # SSE 事件广播（本地开发）
 │   ├── types.ts                # TypeScript 接口定义
 │   ├── use-watchlist.ts        # 自选股 React Hook
@@ -173,6 +193,7 @@ invest-app/
 ├── drizzle/                    # 数据库迁移元数据
 ├── data/                       # SQLite 数据库（已 gitignore）
 ├── proxy.ts                    # 可选 Bearer 令牌认证
+├── proxy.test.ts               # 认证代理测试
 ├── vercel.json                 # Vercel Cron 任务定义
 ├── .env.example                # 环境变量模板
 ├── vitest.config.ts            # 测试配置
@@ -199,6 +220,11 @@ invest-app/
 | 能源转型 | 周一 01:00 UTC | `0 1 * * 1` |
 | 医疗 AI | 周一 01:00 UTC | `0 1 * * 1` |
 | 国防与回流 | 周一 01:00 UTC | `0 1 * * 1` |
+| A 股 AI 算力 | 周一至五 07:30 UTC（北京时间 15:30）| `30 7 * * 1-5` |
+| 半导体国产替代 | 周一至五 07:30 UTC（北京时间 15:30）| `30 7 * * 1-5` |
+| 新能源车产业链 | 周五 08:00 UTC（北京时间 16:00）| `0 8 * * 5` |
+| 消费白马 | 周五 08:00 UTC（北京时间 16:00）| `0 8 * * 5` |
+| 高股息红利 | 周五 08:00 UTC（北京时间 16:00）| `0 8 * * 5` |
 
 **生产环境：** Vercel Cron Jobs 按计划调用 `/api/cron?theme=<slug>`（定义在 `vercel.json`）。
 
@@ -206,18 +232,33 @@ invest-app/
 
 ### 部署
 
+#### 生产环境（已上线）
+
+- **地址:** https://invest.beluga-tempo.com
+- **平台:** Vercel（iad1 — 美国东部）
+- **数据库:** Turso `invest-db`（aws-us-east-1 — 弗吉尼亚）
+- **认证:** 需要 Bearer 令牌（`AUTH_TOKEN` 环境变量，64 位 hex 随机字符串）
+- **环境变量:** 全部存储在 Vercel 加密环境变量中，不在代码里
+
+```bash
+vercel --prod   # 部署并自动绑定 invest.beluga-tempo.com
+```
+
 #### 本地开发
 
 ```bash
 npm install && npm run db:push && npm run db:seed && npm run dev
 ```
 
-#### Vercel
+未设置 `DATABASE_URL` 时使用本地 SQLite（`./data/invest.db`）。
 
-1. 推送到 GitHub
-2. 在 Vercel 控制台连接仓库
-3. 设置环境变量：`DATABASE_URL`、`DATABASE_AUTH_TOKEN`，可选 `LLM_PROVIDER`/`LLM_API_KEY`/`AUTH_TOKEN`
-4. 部署 — cron 任务自动从 `vercel.json` 注册
+#### Turso 数据库管理
+
+```bash
+turso db shell invest-db              # 交互式 SQL 终端
+turso db show invest-db               # 查看数据库信息
+turso db tokens create invest-db      # 轮换认证令牌
+```
 
 ### 设计
 
@@ -229,7 +270,7 @@ npm install && npm run db:push && npm run db:seed && npm run dev
 
 ## English
 
-A bilingual (Chinese/English) investment analysis platform that screens US stocks via TradingView, scores them on an 8-dimension signal matrix, and presents actionable BUY/HOLD/SELL decisions through an interactive dark-themed dashboard.
+A bilingual (Chinese/English) investment analysis platform that screens US and A-share stocks via TradingView, scores them on an 8-dimension signal matrix, and presents actionable BUY/HOLD/SELL decisions through an interactive dark-themed dashboard.
 
 ### Stack
 
@@ -242,14 +283,15 @@ A bilingual (Chinese/English) investment analysis platform that screens US stock
 | Scheduling | Vercel Cron (production), local script (dev) |
 | Data Source | TradingView scan API (direct HTTP, no auth) |
 | AI Thesis | Vercel AI SDK (Anthropic, OpenAI, DeepSeek); falls back to `claude -p` CLI for local dev |
-| Testing | Vitest v4, v8 coverage (92 tests) |
+| Testing | Vitest v4, v8 coverage (125 tests) |
 
 ### Views
 
 | Route | Name | Description |
 |-------|------|-------------|
 | `/` | Dashboard | Signal matrix heatmap, sortable stock cards, click-through to detail |
-| `/screens` | Screens | 5 investment theme cards with one-click screening |
+| `/screens` | Screens | 10 investment theme cards (5 US + 5 A-share) with one-click screening |
+| `/dashboard` | Dashboard | Signal matrix overview (alternate view) |
 | `/stock/[ticker]` | Stock Detail | Price chart, signal breakdown, AI thesis, decision recording |
 | `/history` | History | Screening run timeline, signal evolution, decision journal |
 
@@ -266,7 +308,7 @@ Each stock is scored across 8 dimensions (-1 / 0 / +1 each, total range -8 to +8
 | Momentum | RSI 35–55 (dip buy zone) | RSI 40–60 | RSI > 70 near 52w high |
 | Pattern | ADX > 25, within 10% of 52w high | ADX 15–25 | ADX < 15 |
 | Catalyst | Earnings < 30 days | > 60 days | Binary event risk |
-| Sentiment | Reddit mentions rank high & rising | Moderate mentions | Low or declining mentions |
+| Sentiment | Reddit (US) / Xueqiu (A-shares) mentions rank high & rising | Moderate mentions | Low or declining mentions |
 
 **Rating scale:** +6 to +8 = Strong Buy, +4 to +5 = Buy, +1 to +3 = Lean Buy, -1 to 0 = Hold, -2 to -3 = Sell, -4 to -8 = Strong Sell.
 
@@ -279,6 +321,11 @@ Each stock is scored across 8 dimensions (-1 / 0 / +1 each, total range -8 to +8
 | Energy Transition | Solar, Renewables, Electrical Equipment | Rev Growth > 5%, FCF Margin > 0%, MCap > $1B |
 | Healthcare AI | MedTech, Health IT, Diagnostics | R&D > 10%, Rev Growth > 10% |
 | Defense & Reshoring | Aerospace, Specialty Chemicals | Rev Growth > 5% |
+| **A-Share AI Computing** | Semiconductors, Cloud, Data Centers | Rev Growth > 15%, Gross Margin > 25%, MCap > ¥20B |
+| **A-Share New Energy Vehicle** | EV, Batteries, Auto Parts | Rev Growth > 10%, MCap > ¥10B |
+| **A-Share Consumer Leaders** | Consumer Staples, Durables, Beverages | Gross Margin > 30%, ROE > 15%, MCap > ¥50B |
+| **A-Share High Dividend** | Banks, Utilities, Energy | Div Yield > 3%, Op Margin > 10%, MCap > ¥50B |
+| **A-Share Semiconductor** | Semiconductors, Chip Design, Foundry | Rev Growth > 10%, MCap > ¥10B |
 
 ### Getting Started
 
@@ -292,7 +339,7 @@ Each stock is scored across 8 dimensions (-1 / 0 / +1 each, total range -8 to +8
 ```bash
 npm install
 npm run db:push    # Create database schema
-npm run db:seed    # Insert 5 theme presets
+npm run db:seed    # Insert 10 theme presets (5 US + 5 A-share)
 ```
 
 #### Run
@@ -313,11 +360,11 @@ The app runs at **http://localhost:8888**.
 #### Test
 
 ```bash
-npm run test                # Run all 92 tests
+npm run test                # Run all 125 tests
 npm run test -- --coverage  # With coverage report
 ```
 
-92 tests covering `lib/signal-scorer.ts` (100% coverage), `lib/llm.ts`, and `lib/reddit-sentiment.ts`.
+125 tests covering `lib/signal-scorer.ts` (100% coverage), `lib/llm.ts`, `lib/reddit-sentiment.ts`, `lib/sentiment.ts`, `lib/xueqiu-sentiment.ts`, `lib/db-operations.ts`, and `proxy.ts`.
 
 ### Environment Variables
 
@@ -353,6 +400,8 @@ invest-app/
 ├── app/                        # Next.js App Router
 │   ├── layout.tsx              # Root layout (Starry Blue theme, fonts)
 │   ├── page.tsx                # Dashboard (signal matrix overview)
+│   ├── dashboard/              # Dashboard (alternate view)
+│   ├── dashboard-client.tsx    # Dashboard client component
 │   ├── screens/                # Theme screening UI
 │   ├── stock/[ticker]/         # Individual stock detail
 │   ├── history/                # Historical runs & decision journal
@@ -373,19 +422,29 @@ invest-app/
 │   ├── price-chart.tsx         # lightweight-charts OHLC
 │   ├── thesis-panel.tsx        # AI thesis display
 │   ├── decision-journal.tsx    # BUY/SELL/HOLD recording
+│   ├── rating-tooltip.tsx      # Rating tooltip popup
+│   ├── signal-history.tsx      # Signal history trends
+│   ├── star-button.tsx         # Watchlist star button
+│   ├── theme-card.tsx          # Theme preset card
+│   ├── watchlist-section.tsx   # Watchlist management section
 │   └── ui/                     # shadcn/ui primitives
 ├── lib/
 │   ├── signal-scorer.ts        # 8-dimension scoring (pure functions)
 │   ├── signal-scorer.test.ts   # 71 tests, 100% coverage
 │   ├── screener.ts             # TradingView scan API client
-│   ├── themes.ts               # 5 theme presets with filters
+│   ├── themes.ts               # 10 theme presets (5 US + 5 A-share)
 │   ├── schema.ts               # Drizzle ORM schema (5 tables)
 │   ├── db.ts                   # libSQL/Turso connection (auto-detects local vs cloud)
 │   ├── db-operations.ts        # Shared persist logic for screen results
 │   ├── llm.ts                  # LLM abstraction — Anthropic/OpenAI/DeepSeek via AI SDK
 │   ├── llm.test.ts             # LLM unit tests
+│   ├── sentiment.ts            # Market-aware sentiment router (US→Reddit, A-shares→Xueqiu)
+│   ├── sentiment.test.ts       # Sentiment router tests
 │   ├── reddit-sentiment.ts     # Reddit sentiment scoring
-│   ├── reddit-sentiment.test.ts # Sentiment tests
+│   ├── reddit-sentiment.test.ts # Reddit sentiment tests
+│   ├── xueqiu-sentiment.ts    # Xueqiu (雪球) sentiment (A-shares)
+│   ├── xueqiu-sentiment.test.ts # Xueqiu sentiment tests
+│   ├── db-operations.test.ts   # DB operations tests
 │   ├── sse.ts                  # SSE broadcaster (local dev)
 │   ├── types.ts                # TypeScript interfaces
 │   ├── use-watchlist.ts        # Watchlist React hook
@@ -396,6 +455,7 @@ invest-app/
 ├── drizzle/                    # Migration metadata
 ├── data/                       # SQLite database (gitignored)
 ├── proxy.ts                    # Optional bearer token auth
+├── proxy.test.ts               # Auth proxy tests
 ├── vercel.json                 # Vercel Cron job definitions
 ├── .env.example                # Environment variable template
 ├── vitest.config.ts            # Test configuration
@@ -422,6 +482,11 @@ invest-app/
 | Energy Transition | Monday 01:00 UTC | `0 1 * * 1` |
 | Healthcare AI | Monday 01:00 UTC | `0 1 * * 1` |
 | Defense & Reshoring | Monday 01:00 UTC | `0 1 * * 1` |
+| A-Share AI Computing | Mon–Fri 07:30 UTC (3:30 PM CST) | `30 7 * * 1-5` |
+| A-Share Semiconductor | Mon–Fri 07:30 UTC (3:30 PM CST) | `30 7 * * 1-5` |
+| A-Share New Energy Vehicle | Friday 08:00 UTC (4:00 PM CST) | `0 8 * * 5` |
+| A-Share Consumer Leaders | Friday 08:00 UTC (4:00 PM CST) | `0 8 * * 5` |
+| A-Share High Dividend | Friday 08:00 UTC (4:00 PM CST) | `0 8 * * 5` |
 
 **Production:** Vercel Cron Jobs call `/api/cron?theme=<slug>` on schedule (defined in `vercel.json`).
 
@@ -429,18 +494,33 @@ invest-app/
 
 ### Deployment
 
+#### Production (Live)
+
+- **URL:** https://invest.beluga-tempo.com
+- **Platform:** Vercel (iad1 — US East)
+- **Database:** Turso `invest-db` (aws-us-east-1 — Virginia)
+- **Auth:** Bearer token required (`AUTH_TOKEN` env var, 64-char hex)
+- **Env vars:** All stored in Vercel encrypted environment variables, not in code
+
+```bash
+vercel --prod   # Deploy and alias to invest.beluga-tempo.com
+```
+
 #### Local Dev
 
 ```bash
 npm install && npm run db:push && npm run db:seed && npm run dev
 ```
 
-#### Vercel
+Uses local SQLite (`./data/invest.db`) when `DATABASE_URL` is not set.
 
-1. Push to GitHub
-2. Connect repo in Vercel dashboard
-3. Set environment variables: `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, optionally `LLM_PROVIDER`/`LLM_API_KEY`/`AUTH_TOKEN`
-4. Deploy — cron jobs auto-register from `vercel.json`
+#### Turso DB Management
+
+```bash
+turso db shell invest-db              # Interactive SQL shell
+turso db show invest-db               # View database info
+turso db tokens create invest-db      # Rotate auth token
+```
 
 ### Design
 

@@ -2,7 +2,9 @@
 
 ## What This Is
 
-Bilingual (zh-CN first) investment signal dashboard. Next.js 16 + React 19 + libSQL/Turso + TradingView data. Scores US stocks on an 8-dimension signal matrix and outputs BUY/HOLD/SELL decisions. Deployable to Vercel or run locally.
+Bilingual (zh-CN first) investment signal dashboard. Next.js 16 + React 19 + libSQL/Turso + TradingView data. Scores US and A-share stocks on an 8-dimension signal matrix and outputs BUY/HOLD/SELL decisions.
+
+**Live:** https://invest.beluga-tempo.com (Vercel + Turso, bearer token auth required)
 
 ## Commands
 
@@ -11,7 +13,7 @@ npm run dev              # Next.js dev server on port 8888
 npm run build            # Production build
 npm run start            # Production server on port 8888
 npm run cron:local       # Local cron scheduler (run alongside dev server)
-npm run test             # Vitest (92 tests)
+npm run test             # Vitest (125 tests)
 npm run test -- --coverage  # With v8 coverage
 npm run db:push          # Apply schema to database
 npm run db:seed          # Seed theme presets
@@ -25,9 +27,10 @@ npm run db:studio        # Open Drizzle Studio GUI
 
 - **Server Components by default.** Only use `"use client"` when the component needs browser APIs, event handlers, or React state.
 - **libSQL via @libsql/client + Drizzle ORM.** Async queries. Supports both local SQLite file (`./data/invest.db`) and Turso cloud via `DATABASE_URL` env var.
-- **TradingView scan API** — Direct HTTP POST to `https://scanner.tradingview.com/america/scan`. No auth required.
+- **TradingView scan API** — Direct HTTP POST to `https://scanner.tradingview.com/{market}/scan` (market = `america` or `china`). No auth required.
 - **Signal scoring is pure functions** in `lib/signal-scorer.ts`. All business logic is here, fully tested. Do not add side effects to these functions.
 - **LLM abstraction** (`lib/llm.ts`) — Vercel AI SDK supporting Anthropic, OpenAI, DeepSeek. Provider-agnostic via `LLM_PROVIDER` + `LLM_API_KEY` env vars. Falls back to `claude -p` CLI when no API key configured (local dev with Claude Max). Returns 503 only when both API and CLI are unavailable.
+- **Sentiment routing** (`lib/sentiment.ts`) — Market-aware router: Reddit sentiment for US stocks, Xueqiu (雪球) sentiment for A-shares.
 - **Auth proxy** (`proxy.ts`) — Optional bearer token via `AUTH_TOKEN` env var. Open access when not configured.
 - **Cron** — Vercel Cron Jobs in production (`vercel.json`), `scripts/cron-local.ts` for local dev.
 - **Polling** for dashboard updates (30s interval). SSE kept for local dev compatibility.
@@ -97,14 +100,20 @@ See `.env.example`. All optional except `DATABASE_URL` + `DATABASE_AUTH_TOKEN` f
 | `lib/signal-scorer.ts` | Core business logic — 8 scoring functions, rating, levels (pure, no I/O) |
 | `lib/signal-scorer.test.ts` | 71 tests, 100% coverage |
 | `lib/screener.ts` | TradingView HTTP client, field mapping, filter builder |
-| `lib/themes.ts` | Themed screening presets with sector filters |
+| `lib/themes.ts` | 10 themed screening presets (5 US + 5 A-share) with sector filters |
 | `lib/schema.ts` | Drizzle ORM schema (5 tables) |
 | `lib/types.ts` | RawStockData, SignalScores, ScoredStock, Rating interfaces |
 | `lib/db.ts` | libSQL/Turso connection (auto-detects local vs cloud) |
 | `lib/llm.ts` | LLM abstraction — Anthropic/OpenAI/DeepSeek via AI SDK |
 | `lib/db-operations.ts` | Shared persist logic for screen results |
+| `lib/sentiment.ts` | Market-aware sentiment router (Reddit for US, Xueqiu for A-shares) |
+| `lib/sentiment.test.ts` | Sentiment router tests |
+| `lib/xueqiu-sentiment.ts` | Xueqiu (雪球) sentiment for A-shares |
+| `lib/xueqiu-sentiment.test.ts` | Xueqiu sentiment tests |
+| `lib/db-operations.test.ts` | DB operations tests |
 | `lib/sse.ts` | SSE event broadcaster (local dev) |
 | `proxy.ts` | Optional bearer token auth |
+| `proxy.test.ts` | Auth proxy tests |
 | `vercel.json` | Vercel Cron job definitions |
 | `scripts/cron-local.ts` | Local cron scheduler |
 | `app/api/screen/` | Run themed screen → score → persist |
@@ -114,16 +123,37 @@ See `.env.example`. All optional except `DATABASE_URL` + `DATABASE_AUTH_TOKEN` f
 
 ## Deployment
 
+### Production (Live)
+
+- **URL:** https://invest.beluga-tempo.com
+- **Platform:** Vercel (iad1 — Washington, D.C.)
+- **Database:** Turso `invest-db` (aws-us-east-1 — Virginia)
+  - URL: `libsql://invest-db-belugatempo.aws-us-east-1.turso.io`
+  - Dashboard: https://app.turso.tech/belugatempo
+- **Auth:** Bearer token required (`AUTH_TOKEN` env var, 64-char hex)
+- **Env vars** (all in Vercel, encrypted — NOT in code):
+  - `DATABASE_URL` — Turso libsql:// URL
+  - `DATABASE_AUTH_TOKEN` — Turso JWT token
+  - `AUTH_TOKEN` — cryptographically random access token
+
 ### Local Dev
 ```bash
 npm install && npm run db:push && npm run db:seed && npm run dev
 ```
+Uses local SQLite file (`./data/invest.db`) when `DATABASE_URL` is not set.
 
-### Vercel
-1. Push to GitHub
-2. Connect repo in Vercel dashboard
-3. Set environment variables: `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, optionally `LLM_PROVIDER`/`LLM_API_KEY`/`AUTH_TOKEN`
-4. Deploy — cron jobs auto-register from `vercel.json`
+### Deploy to Vercel
+```bash
+vercel --prod   # Deploys and aliases to invest.beluga-tempo.com
+```
+Env vars are already configured. Cron jobs auto-register from `vercel.json`.
+
+### Turso DB Management
+```bash
+turso db shell invest-db              # Interactive SQL shell
+turso db show invest-db               # DB info
+turso db tokens create invest-db      # Rotate auth token
+```
 
 ## Signal Matrix Reference
 
@@ -138,6 +168,6 @@ npm install && npm run db:push && npm run db:seed && npm run dev
 | Momentum | RSI, close, price_52_week_high |
 | Pattern | ADX, close, price_52_week_high |
 | Catalyst | earnings_release_next_trading_date_fq |
-| Sentiment | Reddit mentions rank and momentum |
+| Sentiment | Reddit mentions (US) / Xueqiu mentions (A-shares) |
 
 Rating: +6..+8 = Strong Buy, +4..+5 = Buy, +1..+3 = Lean Buy, -1..0 = Hold, -2..-3 = Sell, -4..-8 = Strong Sell.
