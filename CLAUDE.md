@@ -13,8 +13,11 @@ npm run dev              # Next.js dev server on port 8888
 npm run build            # Production build
 npm run start            # Production server on port 8888
 npm run cron:local       # Local cron scheduler (run alongside dev server)
-npm run test             # Vitest (125 tests)
+npm run test             # Vitest unit tests (124 tests)
 npm run test -- --coverage  # With v8 coverage
+npm run test:e2e         # Playwright E2E tests (35 tests)
+npm run test:e2e:ui      # Playwright interactive UI mode
+npm run test:e2e:smoke   # Smoke tests against live TradingView API (2 tests)
 npm run db:push          # Apply schema to database
 npm run db:seed          # Seed theme presets
 npm run db:generate      # Generate Drizzle migrations
@@ -87,11 +90,23 @@ See `.env.example`. All optional except `DATABASE_URL` + `DATABASE_AUTH_TOKEN` f
 
 ## Testing
 
+### Unit Tests (Vitest)
 - **Framework:** Vitest v4 with globals enabled.
+- **124 tests** across 7 test files.
 - **Coverage target:** 100% on `lib/signal-scorer.ts` (business logic). Enforced in `vitest.config.ts`.
 - **Test file convention:** `*.test.ts` co-located with source.
 - Signal scorer tests cover all 8 scoring functions, rating derivation, level calculations, edge cases.
 - Run `npm run test -- --coverage` and verify 100% before merging changes to signal-scorer.
+
+### E2E Tests (Playwright)
+- **Framework:** Playwright (Chromium only, single worker).
+- **35 tests** (+ 2 smoke tests) across 13 spec files in `e2e/`.
+- **Test DB:** Isolated `data/test.db` via `DATABASE_URL` env var. Created by `global-setup.ts`, cleaned by `global-teardown.ts`.
+- **API tests** (`e2e/api/`): 20 tests covering all 7 API routes (analyze, watchlist, push, history, screen, thesis, cron) — error paths, CRUD, scoring pipeline.
+- **Page tests** (`e2e/pages/`): 15 tests covering navigation, screens, dashboard, history, stock detail — rendering, interaction, data display.
+- **Smoke tests** (`e2e/smoke/`, tagged `@smoke`): 2 tests hitting live TradingView API + real `/api/analyze`. Run separately with `npm run test:e2e:smoke`.
+- **Mocking:** Browser-level `page.route()` intercepts for `/api/screen` calls; API tests seed via `POST /api/push`.
+- **Config:** `playwright.config.ts` — `workers: 1` (SQLite single-writer), port 8888, `webServer` auto-starts `npm run dev`.
 
 ## File Map
 
@@ -120,6 +135,13 @@ See `.env.example`. All optional except `DATABASE_URL` + `DATABASE_AUTH_TOKEN` f
 | `app/api/cron/` | Cron endpoint (called by Vercel Cron or local script) |
 | `app/api/thesis/` | Generate AI investment thesis via LLM |
 | `app/globals.css` | Starry Blue theme tokens |
+| `playwright.config.ts` | Playwright E2E config (Chromium, single worker, test.db) |
+| `e2e/global-setup.ts` | E2E setup: schema push + theme seeding into test.db |
+| `e2e/global-teardown.ts` | E2E cleanup: delete test.db |
+| `e2e/fixtures/` | Test data seeds, mock responses, route interceptor helpers |
+| `e2e/api/*.spec.ts` | 7 API integration test files (20 tests) |
+| `e2e/pages/*.spec.ts` | 5 page E2E test files (15 tests) |
+| `e2e/smoke/*.spec.ts` | 1 smoke test file (2 tests, live TradingView API) |
 
 ## Deployment
 
